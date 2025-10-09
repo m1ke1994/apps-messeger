@@ -1,9 +1,6 @@
 <!-- ProfileView.vue -->
 <template>
   <div class="relative flex min-h-screen w-full flex-col justify-between overflow-x-hidden bg-background-light font-display text-text-light dark:bg-background-dark dark:text-text-dark">
-    <!-- Шапка -->
-
-
     <main class="p-4 space-y-6">
       <!-- Блок профиля -->
       <section class="flex flex-col items-center space-y-4 rounded-xl bg-card-light p-6 shadow-soft dark:bg-card-dark">
@@ -26,11 +23,10 @@
 
         <div class="text-center space-y-1">
           <h2 class="text-2xl font-bold">{{ user.name }}</h2>
-
-         
+          <p class="text-sm text-subtext-light dark:text-subtext-dark">{{ user.city }}</p>
         </div>
 
-        <button class="btn w-full px-4 py-3 text-base font-bold" @click="$emit('edit-profile')">
+        <button class="w-full rounded-lg bg-[#55E792] px-4 py-3 text-base font-bold text-white transition hover:bg-[#44d184]">
           Редактировать профиль
         </button>
       </section>
@@ -64,7 +60,7 @@
           <!-- О себе -->
           <div v-if="active === 'about'">
             <p class="text-subtext-light dark:text-subtext-dark">
-              {{ user.about || 'Информация отсутствует' }}
+              {{ user.about }}
             </p>
 
             <div class="mt-6">
@@ -84,13 +80,13 @@
               <div>
                 <h3 class="mb-1 text-lg font-bold">Образование</h3>
                 <p class="text-sm text-subtext-light dark:text-subtext-dark">
-                  {{ user.education || '—' }}
+                  {{ user.education }}
                 </p>
               </div>
               <div>
                 <h3 class="mb-1 text-lg font-bold">Статус</h3>
                 <p class="text-sm text-subtext-light dark:text-subtext-dark">
-                  {{ user.status || '—' }}
+                  {{ user.status }}
                 </p>
               </div>
             </div>
@@ -98,29 +94,31 @@
 
           <!-- Мои задания -->
           <div v-else-if="active === 'tasks'" class="space-y-3">
-            <slot name="tasks">
-              <p class="text-sm text-subtext-light dark:text-subtext-dark">
-                У вас {{ stats.tasks }} заданий.
-              </p>
-            </slot>
+            <div v-for="(task, i) in user.tasks" :key="i" class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+              <h4 class="font-semibold text-gray-900 dark:text-white">{{ task.title }}</h4>
+              <p class="text-sm text-gray-600 dark:text-gray-400">{{ task.description }}</p>
+              <p class="mt-1 text-xs text-gray-500">Срок: {{ task.deadline }}</p>
+            </div>
           </div>
 
           <!-- Мои отклики -->
           <div v-else-if="active === 'responses'" class="space-y-3">
-            <slot name="responses">
-              <p class="text-sm text-subtext-light dark:text-subtext-dark">
-                Откликов: {{ stats.responses }}.
+            <div v-for="(r, i) in user.responses" :key="i" class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+              <p class="font-medium text-gray-900 dark:text-white">
+                {{ r.task }}
               </p>
-            </slot>
+              <p class="text-sm text-gray-600 dark:text-gray-400">{{ r.message }}</p>
+              <span class="mt-1 inline-block text-xs text-[#55E792]">Статус: {{ r.status }}</span>
+            </div>
           </div>
 
           <!-- Отзывы -->
           <div v-else class="space-y-3">
-            <slot name="reviews">
-              <p class="text-sm text-subtext-light dark:text-subtext-dark">
-                Отзывов: {{ stats.reviews }}.
-              </p>
-            </slot>
+            <div v-for="(rev, i) in user.reviews" :key="i" class="rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+              <p class="font-medium text-gray-900 dark:text-white">{{ rev.author }}</p>
+              <p class="text-sm text-gray-600 dark:text-gray-400">{{ rev.comment }}</p>
+              <span class="mt-1 inline-block text-xs text-[#55E792]">Оценка: {{ rev.rating }}/5</span>
+            </div>
           </div>
         </div>
       </section>
@@ -130,37 +128,32 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
 
 type TabValue = 'about' | 'tasks' | 'responses' | 'reviews'
-type User = {
-  name: string
-  avatarUrl?: string
-  online?: boolean
-  trust?: number
-  about?: string
-  skills?: string[]
-  education?: string
-  status?: string
-}
 
-const defaultAvatar = 'https://placehold.co/256x256/png'
+const defaultAvatar = 'https://i.pravatar.cc/300?img=47'
 
-const props = withDefaults(defineProps<{
-  user?: User
-  stats?: { tasks: number; responses: number; reviews: number }
-}>(), {
-  user: () => ({
-    name: 'Без имени',
-    avatarUrl: '',
-    online: false,
-    trust: 0,
-    about: '',
-    skills: [],
-    education: '',
-    status: ''
-  }),
-  stats: () => ({ tasks: 0, responses: 0, reviews: 0 })
+const user = ref({
+  name: 'Анастасия Самгородецкая',
+  avatarUrl: 'https://i.pravatar.cc/300?img=47',
+  online: true,
+  city: 'Москва',
+  about: 'Фронтенд-разработчик с опытом в Vue, Quasar и Tailwind. Люблю создавать удобные интерфейсы и работать с API.',
+  skills: ['Vue 3', 'Quasar', 'Tailwind', 'TypeScript', 'Pinia', 'REST API'],
+  education: 'МГТУ им. Баумана — Информационные системы и технологии',
+  status: 'Доступен для новых проектов',
+  tasks: [
+    { title: 'Разработка лендинга для стартапа', description: 'Создать адаптивный сайт с анимацией и формой обратной связи.', deadline: 'до 12 октября 2025' },
+    { title: 'Интерфейс биржи заданий', description: 'Реализовать карточки проектов и фильтры по категориям.', deadline: 'до 18 октября 2025' }
+  ],
+  responses: [
+    { task: 'Создание Telegram-бота', message: 'Здравствуйте! Готов выполнить за 2 дня.', status: 'Ожидание ответа' },
+    { task: 'Верстка промо-страницы', message: 'Могу сделать сегодня вечером.', status: 'Принят' }
+  ],
+  reviews: [
+    { author: 'Иван Петров', comment: 'Отличная работа, всё вовремя и качественно!', rating: 5 },
+    { author: 'Мария Смирнова', comment: 'Очень внимательный и ответственный специалист.', rating: 5 }
+  ]
 })
 
 const tabs: { value: TabValue; label: string }[] = [
@@ -171,20 +164,9 @@ const tabs: { value: TabValue; label: string }[] = [
 ]
 
 const active = ref<TabValue>('about')
-const router = useRouter()
-
-function goBack() {
-  if (history.length > 1) router.back()
-  else router.push({ name: 'chats' })
-}
-
-const trustPercent = computed(() => Math.max(0, Math.min(props.user.trust ?? 0, 100)))
-const stats = computed(() => props.stats ?? { tasks: 0, responses: 0, reviews: 0 })
-const user = computed(() => props.user)
 
 function selectTab(val: TabValue) {
   active.value = val
-  // центрируем активную вкладку при клике
   requestAnimationFrame(() => {
     const container = document.querySelector('.tabs-scroll') as HTMLElement | null
     const activeBtn = container?.querySelector('[aria-selected="true"]') as HTMLElement | null
@@ -197,32 +179,9 @@ function selectTab(val: TabValue) {
 </script>
 
 <style>
-.trust-progress {
-  stroke-dasharray: 283;
-  stroke-dashoffset: calc(283 - (283 * var(--value)) / 100);
-}
-
-/* горизонтальный скролл вкладок */
 .tabs-scroll {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
 .tabs-scroll::-webkit-scrollbar { display: none; }
-
-/* кнопки и иконки */
-.btn-icon {
-  height: 2.5rem;
-  width: 2.5rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid transparent;
-  border-radius: 0.75rem;
-  background: transparent;
-  color: #6b7280;
-  transition: background-color 0.15s, color 0.15s, transform 0.15s;
-}
-.dark .btn-icon { color: #9ca3af; }
-.btn-icon:hover { background-color: #55E792; color: #000; }
-.btn-icon:active { transform: translateY(1px); }
 </style>
