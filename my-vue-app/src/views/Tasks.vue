@@ -88,13 +88,13 @@
             <!-- Управление -->
           <div class="flex items-center justify-between gap-2">
   <button
-    class="inline-flex h-9 items-center justify-center rounded-xl bg-primary px-4 text-sm font-extrabold text-background-dark shadow-sm transition-all duration-150 hover:bg-emerald-500 hover:shadow-md active:translate-y-px border border-gray-300"
+    class="inline-flex h-9 items-center justify-center rounded-xl bg-primary px-4 text-sm font-extrabold text-background-dark shadow-sm transition-all duration-150 hover:bg-[#D1FAE5] hover:shadow-md active:translate-y-px border border-gray-300"
   >
     Откликнуться
   </button>
 
   <button
-    class="inline-flex h-9 items-center justify-center rounded-xl border border-gray-300 bg-white px-4 text-sm font-semibold text-gray-700 transition-all duration-150 hover:border-gray-400 hover:bg-gray-50 hover:text-gray-900 active:translate-y-px dark:border-white/10 dark:bg-white/5 dark:text-text-dark dark:hover:bg-white/10"
+    class="inline-flex h-9 items-center justify-center rounded-xl border border-gray-300 bg-white px-4 text-sm font-semibold text-gray-700 transition-all duration-150 hover:bg-[#D1FAE5] hover:text-gray-900 active:translate-y-px dark:border-white/10 dark:bg-white/5 dark:text-text-dark dark:hover:bg-white/10"
   >
     Подробнее
   </button>
@@ -194,7 +194,7 @@
       type="button"
       class="h-10 flex-1 rounded-xl border border-black/10 bg-white px-4 text-sm font-semibold text-slate-700
              backdrop-blur transition-all duration-150
-             hover:border-gray-400 hover:bg-gray-50 hover:text-slate-900
+             hover:bg-[#D1FAE5] hover:text-slate-900
              active:translate-y-px
              dark:border-white/10 dark:bg-white/5 dark:text-slate-100 dark:hover:bg-white/10 border border-gray-300"
     >
@@ -206,7 +206,7 @@
       type="button"
       class="h-10 flex-1 rounded-xl bg-primary px-4 text-sm font-extrabold text-background-dark
              shadow-sm transition-all duration-150
-             hover:bg-emerald-500 hover:shadow-md
+            hover:bg-[#D1FAE5] hover:shadow-md
              active:translate-y-px border border-gray-300"
     >
       Применить
