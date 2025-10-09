@@ -70,3 +70,8 @@ a {
 .dark .btn:disabled {
   background-color: #374151; /* dark:bg-gray-700 */
 }
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: #55E792;
+  box-shadow: 0 0 0 2px #55E79240;
+}

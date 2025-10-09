@@ -3,10 +3,8 @@ import { createRouter, createWebHistory } from 'vue-router'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    {
-      path: '/',
-      redirect: '/chats',
-    },
+    { path: '/', redirect: '/chats' },
+
     {
       path: '/chats',
       name: 'chats',
@@ -20,9 +18,16 @@ const router = createRouter({
       meta: { title: 'Задачи', showBack: true },
     },
     {
+      path: '/tasks/:id(\\d+)',
+      name: 'task-detail',
+      component: () => import('../views/TaskDetail.vue'), // ✅ lazy import вместо необъявленного TaskDetail
+      props: true,
+      meta: { title: 'Задача', showBack: true },
+    },
+    {
       path: '/responses',
       name: 'responses',
-      component: () => import('../views/Responce.vue'),
+      component: () => import('../views/Responce.vue'), // проверь точное имя файла
       meta: { title: 'Отклики', showBack: true },
     },
     {
@@ -43,16 +48,12 @@ const router = createRouter({
       component: () => import('../views/Settings.vue'),
       meta: { title: 'Настройки', showBack: true },
     },
-    {
-      path: '/login',
+    { path: '/login',
       name: 'login',
       component: () => import('../views/Login.vue'),
       meta: { layout: 'auth', title: 'Вход' },
     },
-    {
-      path: '/:pathMatch(.*)*',
-      redirect: '/chats',
-    },
+    { path: '/:pathMatch(.*)*', redirect: '/chats' },
   ],
 })
 

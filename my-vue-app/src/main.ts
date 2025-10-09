@@ -1,3 +1,4 @@
+// src/main.ts
 import './assets/base.css'
 import './assets/main.css'
 
@@ -12,4 +13,7 @@ const app = createApp(App)
 app.use(createPinia())
 app.use(router)
 
-app.mount('#app')
+// дождёмся готовности роутера (устраняет гонки при первом рендере)
+router.isReady().then(() => {
+  app.mount('#app')
+})
