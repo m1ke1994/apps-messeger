@@ -6,7 +6,7 @@
       <div class="relative flex items-center justify-center">
         <button
           type="button"
-          class="absolute left-0 text-gray-500 transition hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+          class="btn-icon absolute left-0"
           @click="handleClose"
           aria-label="Закрыть"
         >
@@ -44,7 +44,7 @@
               <option disabled value="">Выберите категорию</option>
               <option v-for="c in categories" :key="c" :value="c">{{ c }}</option>
             </select>
-            <p v-if="errors.category" class="mt-1 text-xs text-rose-600">{{ errors.category }}</p>
+            <p v-if="errors.category" class="mt-1 text-xs text-rose-600 ">{{ errors.category }}</p>
           </div>
 
           <div>
@@ -139,7 +139,7 @@
               <div class="my-4 h-px w-full bg-gradient-to-r from-transparent via-black/10 to-transparent dark:via-white/10"></div>
 
               <div class="flex flex-wrap items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
-                <span class="rounded-full bg-primary/10 px-2.5 py-1 text-primary">{{ form.category || 'Категория' }}</span>
+                <span class="rounded-full bg-primary/10 px-2.5 py-1 text-primary border border-black">{{ form.category || 'Категория' }}</span>
                 <span v-if="form.deadlineDays" class="rounded-full bg-slate-100 px-2.5 py-1 dark:bg-white/10">
                   Срок: {{ form.deadlineDays }} {{ dayWord(form.deadlineDays) }}
                 </span>
@@ -152,54 +152,56 @@
           </p>
         </section>
       </Transition>
+
+      <!-- Footer -->
+      <div class="p-4">
+        <div v-if="step < 3" class="flex items-center gap-2">
+          <button
+            v-if="step > 1"
+            type="button"
+            class="btn"
+            @click="prev"
+          >
+            Назад
+          </button>
+
+          <button
+            type="button"
+            class="btn"
+            :disabled="!canProceed"
+            @click="next"
+          >
+            Далее
+          </button>
+        </div>
+
+        <div v-else class="flex items-center gap-2">
+          <button
+            type="button"
+            class="btn"
+            @click="prev"
+          >
+            Назад
+          </button>
+
+          <button
+            type="button"
+            class="btn"
+            :disabled="publishing"
+            @click="publish"
+          >
+            <span v-if="!publishing">Опубликовать</span>
+            <span v-else class="inline-flex items-center gap-2">
+              <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a 8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z"></path>
+              </svg>
+              Публикация…
+            </span>
+          </button>
+        </div>
+      </div>
     </main>
-
-    <!-- Footer -->
-    <footer class="p-4">
-      <div v-if="step < 3" class="flex items-center gap-2">
-        <button
-          v-if="step > 1"
-          type="button"
-          @click="prev"
-          class="h-12 flex-1 rounded-xl border border-gray-300 bg-white px-4 text-sm font-semibold text-gray-700 transition-all hover:bg-gray-50 active:translate-y-px dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
-        >
-          Назад
-        </button>
-        <button
-          type="button"
-          :disabled="!canProceed"
-          @click="next"
-          class="h-12 flex-1 rounded-xl bg-primary px-4 text-base font-bold text-background-dark shadow-sm transition-all hover:brightness-95 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          Далее
-        </button>
-      </div>
-
-      <div v-else class="flex items-center gap-2">
-        <button
-          type="button"
-          @click="prev"
-          class="h-12 flex-1 rounded-xl border border-gray-300 bg-white px-4 text-sm font-semibold text-gray-700 transition-all hover:bg-gray-50 active:translate-y-px dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
-        >
-          Назад
-        </button>
-        <button
-          type="button"
-          :disabled="publishing"
-          @click="publish"
-          class="h-12 flex-1 rounded-xl bg-primary px-4 text-base font-bold text-background-dark shadow-sm transition-all hover:brightness-95 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          <span v-if="!publishing">Опубликовать</span>
-          <span v-else class="inline-flex items-center gap-2">
-            <svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a 8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z"></path>
-            </svg>
-            Публикация…
-          </span>
-        </button>
-      </div>
-    </footer>
   </div>
 </template>
 
@@ -285,7 +287,6 @@ function handleClose() {
 async function publish() {
   publishing.value = true
   try {
-    // здесь поставь реальный endpoint и fetch/axios
     await new Promise((r) => setTimeout(r, 1200))
     console.log('POST /api/tasks', { ...form })
     alert('Задание опубликовано!')
@@ -309,8 +310,8 @@ function dayWord(n) {
 :root { --mobile-h: 884px; }
 body { min-height: max(var(--mobile-h), 100dvh); }
 
-/* кастомная стрелка у select */
-.form-select{
+/* стрелка у select */
+.form-select {
   background-image:url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2355e792' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
   background-position:right .75rem center;
   background-repeat:no-repeat;
@@ -319,11 +320,48 @@ body { min-height: max(var(--mobile-h), 100dvh); }
   -webkit-appearance:none; -moz-appearance:none; appearance:none;
 }
 
-/* анимация слайда справа -> налево */
+/* слайд анимация */
 .slide-left-enter-active,
 .slide-left-leave-active { transition: transform .22s ease, opacity .22s ease; will-change: transform, opacity; }
 .slide-left-enter-from { transform: translateX(30%); opacity: 0; }
 .slide-left-enter-to   { transform: translateX(0);    opacity: 1; }
 .slide-left-leave-from { transform: translateX(0);    opacity: 1; }
 .slide-left-leave-to   { transform: translateX(-20%); opacity: 0; }
+
+/* === ЕДИНЫЕ КНОПКИ === */
+/* базовый .btn уже должен быть объявлен у тебя; здесь — только то, что ты прислал */
+.dark .btn {
+  background-color: #1f2937; /* dark:bg-gray-800 */
+  color: #ffffff;
+}
+.btn:hover {
+  background-color: #55E792; /* зелёный hover */
+  color: #000000;
+}
+.btn:active {
+  transform: translateY(1px);
+}
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background-color: #e5e7eb; /* bg-gray-200 */
+}
+.dark .btn:disabled {
+  background-color: #374151; /* dark:bg-gray-700 */
+}
+
+/* компактная кнопка-иконка (крестик) с тем же hover */
+.btn-icon {
+  height: 2.5rem; width: 2.5rem;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid transparent; border-radius: 0.75rem;
+  background: transparent; color: #6b7280; /* gray-500 */
+  transition: background-color .15s ease-out, color .15s ease-out, transform .15s ease-out;
+}
+.dark .btn-icon { color: #9ca3af; } /* gray-400 */
+.btn-icon:hover {
+  background-color: #55E792;
+  color: #000;
+}
+.btn-icon:active { transform: translateY(1px); }
 </style>

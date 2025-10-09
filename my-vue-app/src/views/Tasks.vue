@@ -55,47 +55,61 @@
           </div>
 
           <!-- Заголовок + описание -->
-          <div class="px-4 pb-4 pt-3">
-            <h3 class="mb-2 text-base font-extrabold leading-snug text-text-light transition group-hover:text-primary dark:text-text-dark">
-              {{ t.title }}
-            </h3>
-            <p class="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
-              {{ t.description }}
-            </p>
+         <div class="px-4 pb-4 pt-3">
+  <h3 class="mb-2 text-base font-extrabold leading-snug text-text-light transition group-hover:text-primary dark:text-text-dark">
+    {{ t.title }}
+  </h3>
+  <p class="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+    {{ t.description }}
+  </p>
 
-            <!-- Теги -->
-            <div v-if="t.tags?.length" class="mt-3 flex flex-wrap gap-2">
-              <span
-                v-for="tag in t.tags"
-                :key="tag"
-                class="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary border border-black"
-              >
-                {{ tag }}
-              </span>
-            </div>
+  <!-- Теги -->
+  <div v-if="t.tags?.length" class="mt-3 flex flex-wrap gap-2">
+    <span
+      v-for="tag in t.tags"
+      :key="tag"
+      class="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary border border-black"
+    >
+      {{ tag }}
+    </span>
+  </div>
 
-            <!-- Тип выполнения -->
-            
+  <!-- Срок -->
+  <div class="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+    <!-- Вариант 1: срок в днях -->
+    <span v-if="t.deadlineDays"
+          class="rounded-full bg-slate-100 px-2.5 py-1 dark:bg-white/10">
+      Срок: {{ t.deadlineDays }} {{ dayWord(t.deadlineDays) }}
+    </span>
 
-            <!-- Разделитель -->
-            <div class="my-4 h-px w-full bg-gradient-to-r from-transparent via-black/10 to-transparent dark:via-white/10"></div>
+    <!-- Вариант 2: ISO-дата дедлайна -->
+    <span v-else-if="t.deadlineAt"
+          class="rounded-full bg-slate-100 px-2.5 py-1 dark:bg-white/10">
+      Срок: {{ formatDeadline(t.deadlineAt) }}
+    </span>
 
-            <!-- Управление -->
-          <div class="flex items-center justify-between gap-2">
-  <button
-    class="inline-flex h-9 items-center justify-center rounded-xl bg-primary px-4 text-sm font-extrabold text-background-dark shadow-sm transition-all duration-150 hover:bg-[#D1FAE5] hover:shadow-md active:translate-y-px border border-gray-300"
-  >
-    Откликнуться
-  </button>
+    <!-- Бейдж срочности -->
+    <span v-if="deadlineBadge(t) === 'urgent'"
+          class="rounded-full bg-rose-100 px-2.5 py-1 text-rose-700 dark:bg-rose-400/15 dark:text-rose-300">
+      Срочно
+    </span>
+  </div>
 
-  <button
-    class="inline-flex h-9 items-center justify-center rounded-xl border border-gray-300 bg-white px-4 text-sm font-semibold text-gray-700 transition-all duration-150 hover:bg-[#D1FAE5] hover:text-gray-900 active:translate-y-px dark:border-white/10 dark:bg-white/5 dark:text-text-dark dark:hover:bg-white/10"
-  >
-    Подробнее
-  </button>
+  <!-- Разделитель -->
+  <div class="my-4 h-px w-full bg-gradient-to-r from-transparent via-black/10 to-transparent dark:via-white/10"></div>
+
+  <!-- Управление -->
+  <div class="flex items-center justify-between gap-2">
+    <button class="btn h-9 px-4 text-sm font-extrabold">
+      Откликнуться
+    </button>
+
+    <button class="btn h-9 px-4 text-sm font-semibold">
+      Подробнее
+    </button>
+  </div>
 </div>
 
-          </div>
 
           <!-- Подсветка -->
           <div class="pointer-events-none absolute inset-0 opacity-0 transition group-hover:opacity-100" aria-hidden="true">
@@ -117,9 +131,8 @@
         @click.self="closeFilterPanel()"
       >
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
-        <aside
+ <aside
   class="absolute right-0 top-0 z-50 h-full w-[85%] max-w-sm translate-x-0
-         bg-surface-light dark:bg-surface-dark
          bg-white dark:bg-slate-900
          border-l border-black/10 dark:border-white/10
          p-4 shadow-xl"
@@ -127,97 +140,74 @@
   aria-modal="true"
   aria-labelledby="filters-title"
 >
-  <!-- Заголовок + закрытие -->
-  <div class="mb-3 flex items-center justify-between">
-    <h2 id="filters-title" class="text-base font-extrabold text-text-light dark:text-text-dark text-slate-900 dark:text-slate-100">
-      Фильтры
-    </h2>
-    <button
-      @click="closeFilterPanel()"
-      class="rounded-lg p-2 text-slate-600 hover:bg-black/5 focus:outline-none focus:ring-2 focus:ring-primary/40 dark:text-slate-300 dark:hover:bg-white/10"
-      aria-label="Закрыть"
-      type="button"
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 256 256" fill="currentColor">
-        <path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,1,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"/>
-      </svg>
-    </button>
-  </div>
-
-  <!-- Поля -->
-  <div class="space-y-4">
-    <div>
-      <label class="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">
-        Категория
-      </label>
-      <select
-        v-model="tempCategory"
-        class="w-full rounded-xl border border-black/10 bg-white/80 p-2.5 text-sm text-slate-900
-               outline-none transition
-               focus:border-primary focus:ring-2 focus:ring-primary/30
-               dark:border-white/10 dark:bg-white/5 dark:text-slate-100"
-      >
-        <option :value="allCategoryName">Все задания</option>
-        <option v-for="c in categoriesList" :key="c" :value="c">{{ c }}</option>
-      </select>
-    </div>
-
-    <div>
-      <label class="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300">
-        Статус
-      </label>
-      <select
-        v-model="tempStatus"
-        class="w-full rounded-xl border border-black/10 bg-white/80 p-2.5 text-sm text-slate-900
-               outline-none transition
-               focus:border-primary focus:ring-2 focus:ring-primary/30
-               dark:border-white/10 dark:bg-white/5 dark:text-slate-100"
-      >
-        <option value="all">Все статусы</option>
-        <option value="pending">{{ statusLabels.pending }}</option>
-        <option value="progress">{{ statusLabels.progress }}</option>
-        <option value="completed">{{ statusLabels.completed }}</option>
-        <option value="canceled">{{ statusLabels.canceled }}</option>
-      </select>
-    </div>
-  </div>
-
-  <!-- Кнопки -->
+  ...
   <div class="mt-6 flex items-center gap-2">
     <button
       @click="resetFilters()"
       type="button"
       class="h-10 flex-1 rounded-xl border border-black/10 bg-white px-4 text-sm font-semibold text-slate-700
              backdrop-blur transition-all duration-150
-             hover:bg-[#D1FAE5] hover:text-slate-900
-             active:translate-y-px
-             dark:border-white/10 dark:bg-white/5 dark:text-slate-100 dark:hover:bg-white/10 border border-gray-300"
+             hover:bg-[#D1FAE5] hover:text-slate-900 active:translate-y-px
+             dark:border-white/10 dark:bg-white/5 dark:text-slate-100 dark:hover:bg-white/10"
     >
       Сбросить
     </button>
-
     <button
       @click="applyFilters()"
       type="button"
       class="h-10 flex-1 rounded-xl bg-primary px-4 text-sm font-extrabold text-background-dark
              shadow-sm transition-all duration-150
-            hover:bg-[#D1FAE5] hover:shadow-md
-             active:translate-y-px border border-gray-300"
+             hover:bg-[#D1FAE5] hover:shadow-md active:translate-y-px border border-gray-300"
     >
       Применить
     </button>
   </div>
 </aside>
 
+
       </div>
     </transition>
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed, reactive, ref } from 'vue'
 
-/* --- цвета и подписи статусов --- */
+/* сроки */
+// склонение "день/дня/дней"
+function dayWord(n: number) {
+  const mod10 = n % 10, mod100 = n % 100
+  if (mod10 === 1 && mod100 !== 11) return 'день'
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return 'дня'
+  return 'дней'
+}
+
+function formatDeadline(iso: string) {
+  const d = new Date(iso)
+  if (isNaN(+d)) return iso
+  const date = d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  const hh = String(d.getHours()).padStart(2, '0')
+  const mm = String(d.getMinutes()).padStart(2, '0')
+  return (hh === '00' && mm === '00') ? date : `${date}, ${hh}:${mm}`
+}
+
+function daysBetweenNow(iso?: string): number | null {
+  if (!iso) return null
+  const target = new Date(iso).getTime()
+  if (isNaN(target)) return null
+  const diffMs = target - Date.now()
+  return Math.ceil(diffMs / 86_400_000)
+}
+
+function deadlineBadge(t: any): 'urgent' | 'soon' | null {
+  const days = typeof t.deadlineDays === 'number' ? t.deadlineDays : daysBetweenNow(t.deadlineAt)
+  if (days == null) return null
+  if (days <= 2) return 'urgent'
+  if (days <= 7) return 'soon'
+  return null
+}
+
+/* статусы */
 const statusColors = {
   pending: '#f59e0b',
   progress: '#4f46e5',
@@ -237,60 +227,24 @@ const statusChip = {
   canceled: 'bg-rose-100 text-rose-800 dark:bg-rose-400/15 dark:text-rose-300',
 }
 
-/* --- данные --- */
+/* данные */
 const categoriesList = ['Маркетинг', 'IT', 'Дизайн', 'Офлайн']
 const allCategoryName = 'Все задания'
 
 const tasks = reactive([
-  {
-    id: 1,
-    category: 'Маркетинг',
-    status: 'pending',
-    price: 2500,
-    title: 'Лендинг для кофейни "Daily Grind"',
-    description: 'Нужен современный адаптивный лендинг. Яркий визуал, аккуратная структура.',
-    tags: ['Дизайн', 'Маркетинг'],
-    offline: false,
-  },
-  {
-    id: 2,
-    category: 'Офлайн',
-    status: 'progress',
-    price: 1500,
-    title: 'Помощь на складе',
-    description: 'Разложить товар, провести ревизию, подготовить к отгрузке.',
-    tags: ['Логистика'],
-    offline: true,
-  },
-  {
-    id: 3,
-    category: 'IT',
-    status: 'completed',
-    price: 8000,
-    title: 'Верстка корпоративного сайта',
-    description: 'Сверстать по готовому дизайну. 4–5 страниц, важна SEO-структура.',
-    tags: ['Web-разработка', 'WordPress'],
-    offline: false,
-  },
-  {
-    id: 4,
-    category: 'Дизайн',
-    status: 'canceled',
-    price: 500,
-    title: 'Оформление поста для соцсетей',
-    description: 'Подготовить рекламный пост с учётом брендбука.',
-    tags: ['SMM'],
-    offline: true,
-  },
+  { id: 1, category: 'Маркетинг', status: 'pending',  price: 2500, title: 'Лендинг для кофейни "Daily Grind"', description: 'Нужен современный адаптивный лендинг. Яркий визуал, аккуратная структура.', tags: ['Дизайн', 'Маркетинг'], offline: false, deadlineDays: 5 },
+  { id: 2, category: 'Офлайн',    status: 'progress',  price: 1500, title: 'Помощь на складе', description: 'Разложить товар, провести ревизию, подготовить к отгрузке.', tags: ['Логистика'], offline: true, deadlineAt: new Date(Date.now()+2*864e5).toISOString() },
+  { id: 3, category: 'IT',        status: 'completed', price: 8000, title: 'Верстка корпоративного сайта', description: 'Сверстать по готовому дизайну. 4–5 страниц, важна SEO-структура.', tags: ['Web-разработка', 'WordPress'], offline: false },
+  { id: 4, category: 'Дизайн',    status: 'canceled',  price: 500,  title: 'Оформление поста для соцсетей', description: 'Подготовить рекламный пост с учётом брендбука.', tags: ['SMM'], offline: true },
 ])
 
-/* --- состояние фильтров --- */
+/* фильтры */
 const searchQuery = ref('')
-const selectedStatus = ref('all')
+const selectedStatus = ref<'all'|'pending'|'progress'|'completed'|'canceled'>('all')
 const selectedCategory = ref(allCategoryName)
 
 const showFilter = ref(false)
-const tempStatus = ref('all')
+const tempStatus = ref<typeof selectedStatus.value>('all')
 const tempCategory = ref(allCategoryName)
 
 function openFilterPanel() {
@@ -298,9 +252,7 @@ function openFilterPanel() {
   tempCategory.value = selectedCategory.value
   showFilter.value = true
 }
-function closeFilterPanel() {
-  showFilter.value = false
-}
+function closeFilterPanel() { showFilter.value = false }
 function resetFilters() {
   tempStatus.value = 'all'
   tempCategory.value = allCategoryName
@@ -312,21 +264,21 @@ function applyFilters() {
   closeFilterPanel()
 }
 
-/* --- вычисляемый список --- */
+/* список */
 const filteredTasks = computed(() => {
   const q = searchQuery.value.toLowerCase().trim()
   return tasks.filter((t) => {
     const byCategory = selectedCategory.value === allCategoryName || t.category === selectedCategory.value
     const byStatus = selectedStatus.value === 'all' || t.status === selectedStatus.value
-    const inText =
-      !q ||
-      t.title.toLowerCase().includes(q) ||
-      t.description.toLowerCase().includes(q) ||
-      (t.tags && t.tags.some((tag) => tag.toLowerCase().includes(q)))
+    const inText = !q
+      || t.title.toLowerCase().includes(q)
+      || t.description.toLowerCase().includes(q)
+      || (t.tags && t.tags.some((tag: string) => tag.toLowerCase().includes(q)))
     return byCategory && byStatus && inText
   })
 })
 </script>
+
 
 <style>
 :root { --mobile-h: 884px; }
