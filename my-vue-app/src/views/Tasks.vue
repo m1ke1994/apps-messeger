@@ -23,9 +23,12 @@
         class="flex h-11 w-11 items-center justify-center rounded-xl border border-black/10 bg-white/80 text-slate-600 transition hover:bg-white/90 active:translate-y-px dark:border-white/10 dark:bg-white/5 dark:text-slate-200"
         aria-label="Фильтры"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 256 256">
-          <path d="M232,64a8,8,0,0,1-8,8H160a8,8,0,0,1,0-16h64A8,8,0,0,1,232,64ZM40,72H96a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16Zm128,48H88a8,8,0,0,0,0,16h80a8,8,0,0,0,0-16Zm-40,64H40a8,8,0,0,0,0,16h88a8,8,0,0,0,0-16Zm96,0H184a8,8,0,0,0,0,16h40a8,8,0,0,0,0-16Z"/>
-        </svg>
+       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 256 256" aria-hidden="true"
+     stroke="currentColor" stroke-width="16" stroke-linejoin="round" stroke-linecap="round">
+  <!-- контур той же формы -->
+  <path d="M24 56h208l-80 88v46l-32 16v-62L24 56z"/>
+</svg>
+
       </button>
     </div>
 
