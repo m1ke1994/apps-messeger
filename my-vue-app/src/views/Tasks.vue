@@ -68,19 +68,14 @@
               <span
                 v-for="tag in t.tags"
                 :key="tag"
-                class="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary"
+                class="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary border border-black"
               >
                 {{ tag }}
               </span>
             </div>
 
             <!-- Тип выполнения -->
-            <div v-if="t.offline" class="mt-3 inline-flex items-center gap-2 rounded-lg bg-black/5 px-2.5 py-1.5 text-[11px] font-medium text-slate-600 dark:bg-white/5 dark:text-slate-300">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 256 256">
-                <path d="M128,64a40,40,0,1,0,40,40A40,40,0,0,0,128,64Zm0,64a24,24,0,1,1,24-24A24,24,0,0,1,128,128Zm0-112a88.1,88.1,0,0,0-88,88c0,34.42,22.12,74.29,82.39,122.88a8,8,0,0,0,11.22,0C193.88,214.29,216,174.42,216,104A88.1,88.1,0,0,0,128,16Zm0,206.59C79.8,174,48,131.18,48,104a80,80,0,0,1,160,0C208,131.18,176.2,174,128,222.59Z"/>
-              </svg>
-              Офлайн-задание
-            </div>
+            
 
             <!-- Разделитель -->
             <div class="my-4 h-px w-full bg-gradient-to-r from-transparent via-black/10 to-transparent dark:via-white/10"></div>
