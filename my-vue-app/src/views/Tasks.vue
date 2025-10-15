@@ -94,10 +94,7 @@
                 Откликнуться
               </button>
 
-              <button class="btn h-9 px-4 text-sm font-semibold"
-                @click="router.push({ name: 'task-detail', params: { id: t.id } })">
-                Подробнее
-              </button>
+              
 
             </div>
           </div>
