@@ -283,10 +283,21 @@ function openFilterPanel() {
 }
 function closeFilterPanel() { showFilter.value = false }
 function resetFilters() {
+  // Сбросить выбранные значения (те, что реально применяются к списку)
+  selectedStatus.value = 'all'
+  selectedCategory.value = allCategoryName
+
+  // Синхронно сбросить временные (чтобы при следующем открытии всё было по нулям)
   tempStatus.value = 'all'
   tempCategory.value = allCategoryName
+
+  // Очистить поиск
   searchQuery.value = ''
+
+  // Закрыть панель
+  closeFilterPanel()
 }
+
 function applyFilters() {
   selectedStatus.value = tempStatus.value
   selectedCategory.value = tempCategory.value
