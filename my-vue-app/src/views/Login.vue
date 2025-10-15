@@ -24,7 +24,7 @@
 
         <button
           type="button"
-          class="inline-flex w-full items-center justify-center gap-2 rounded-full bg-emerald-500 px-6 py-3 text-lg font-semibold text-slate-950 transition hover:bg-emerald-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-300"
+          class="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#047857] px-6 py-3 text-lg font-semibold text-white transition hover:bg-[#059669] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#059669]"
           @click="loginWithTelegram"
         >
           Продолжить через Telegram

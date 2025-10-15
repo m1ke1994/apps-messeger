@@ -32,7 +32,7 @@
 
         <button
           type="button"
-          class="w-full rounded-xl bg-emerald-700 px-5 py-3 text-base font-bold text-white shadow-sm transition active:translate-y-px hover:bg-emerald-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700/40"
+          class="w-full rounded-xl bg-[#047857] px-5 py-3 text-base font-bold text-white shadow-sm transition hover:bg-[#059669] active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#059669]/40"
         >
           Редактировать профиль
         </button>
@@ -56,10 +56,8 @@
                 :aria-selected="active === tab.value"
                 :tabindex="active === tab.value ? 0 : -1"
                 @click="selectTab(tab.value)"
-                class="snap-start inline-flex items-center rounded-full border px-3.5 py-2 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700/30"
-                :class="active === tab.value
-                  ? 'border-emerald-700 text-emerald-700 bg-emerald-700/10 font-semibold'
-                  : 'border-border-light text-subtext-light hover:bg-white/60 dark:border-white/20 dark:text-subtext-dark dark:hover:bg-card-dark/60'"
+                class="snap-start inline-flex items-center rounded-full border border-transparent bg-[#047857] px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-[#059669] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#059669]/30"
+                :class="active === tab.value ? 'opacity-100 shadow-sm' : 'opacity-70'"
               >
                 {{ tab.label }}
               </button>

@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div
     class="relative flex min-h-screen w-full flex-col justify-between overflow-x-hidden bg-background-light font-display dark:bg-background-dark">
     <!-- Поиск + кнопка фильтров -->
@@ -16,7 +16,7 @@
 
       <!-- кнопка фильтров -->
       <button type="button" @click="openFilterPanel()"
-        class="flex h-11 w-11 items-center justify-center rounded-xl border border-black/10 bg-white/80 text-slate-600 transition hover:bg-white/90 active:translate-y-px dark:border-white/10 dark:bg-white/5 dark:text-slate-200"
+        class="flex h-11 w-11 items-center justify-center rounded-xl bg-[#047857] text-white transition hover:bg-[#059669] active:translate-y-px focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#059669]"
         aria-label="Фильтры">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 256 256"
           aria-hidden="true" stroke="currentColor" stroke-width="16" stroke-linejoin="round" stroke-linecap="round">
@@ -176,17 +176,19 @@
 
           <!-- Кнопки -->
           <div class="mt-6 flex items-center gap-2">
-            <button @click="resetFilters()" type="button" class="h-10 flex-1 rounded-xl border border-black/10 bg-white px-4 text-sm font-semibold text-slate-700
-             backdrop-blur transition-all duration-150
-             hover:bg-[#55E792] hover:text-black active:translate-y-px
-             dark:border-white/10 dark:bg-white/5 dark:text-slate-100 dark:hover:bg-[#55E792] dark:hover:text-black">
+            <button
+              @click="resetFilters()"
+              type="button"
+              class="h-10 flex-1 rounded-xl bg-[#047857] px-4 text-sm font-semibold text-white transition-all duration-150 hover:bg-[#059669] active:translate-y-px focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#059669]"
+            >
               Сбросить
             </button>
 
-            <button @click="applyFilters()" type="button" class="h-10 flex-1 rounded-xl border border-black/10 bg-white px-4 text-sm font-extrabold text-slate-900
-             shadow-sm transition-all duration-150
-             hover:bg-[#55E792] hover:text-black hover:shadow-md active:translate-y-px
-             dark:border-white/10 dark:bg-white/5 dark:text-slate-100 dark:hover:bg-[#55E792] dark:hover:text-black">
+            <button
+              @click="applyFilters()"
+              type="button"
+              class="h-10 flex-1 rounded-xl bg-[#047857] px-4 text-sm font-extrabold text-white shadow-sm transition-all duration-150 hover:bg-[#059669] hover:shadow-md active:translate-y-px focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#059669]"
+            >
               Применить
             </button>
           </div>
