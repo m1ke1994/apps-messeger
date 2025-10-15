@@ -192,17 +192,26 @@ const SvgIcon = defineComponent({
           h('circle', { cx: '8',  cy: '12', r: '2.2', stroke: color, 'stroke-width': '1.8', fill: 'none' }),
           h('circle', { cx: '15', cy: '17', r: '2.2', stroke: color, 'stroke-width': '1.8', fill: 'none' }),
         ]),
-      chats: () =>
-        h('svg', baseAttrs, [
-          h('path', {
-            d: 'M4 12a6 6 0 1 1 11.7 2.4L18 18l-3.6-1.3A6 6 0 0 1 4 12Z',
-            stroke: color, 'stroke-width': '1.8', 'stroke-linecap': 'round', 'stroke-linejoin': 'round',
-          }),
-          h('path', {
-            d: 'M14.5 5.5A5.5 5.5 0 1 1 21 11l1.5 3-3-1A5.5 5.5 0 0 1 14.5 5.5Z',
-            stroke: color, 'stroke-width': '1.2', 'stroke-linecap': 'round', 'stroke-linejoin': 'round', opacity: '0.7',
-          }),
-        ]),
+     chats: () =>
+  h('svg', {
+    ...baseAttrs,
+    viewBox: '0 0 512 512',
+    fill: 'none',
+    xmlns: 'http://www.w3.org/2000/svg',
+  }, [
+    h('path', {
+      d: 'M256 32C132.3 32 32 120.9 32 232c0 49.6 23.4 95 62.6 130.1C85 401.2 72.3 437.3 72 438.3a8 8 0 0 0 7.5 10.6c30.7 0 74.4-21.8 97.4-35.2 24.3 8.2 50.8 12.3 79.1 12.3 123.7 0 224-88.9 224-200S379.7 32 256 32Z',
+      stroke: color,
+      'stroke-width': '42',
+      'stroke-linecap': 'round',
+      'stroke-linejoin': 'round',
+      fill: 'none',
+    }),
+    h('circle', { cx: '176', cy: '232', r: '16', fill: color }),
+    h('circle', { cx: '256', cy: '232', r: '16', fill: color }),
+    h('circle', { cx: '336', cy: '232', r: '16', fill: color }),
+  ]),
+
       tasks: () =>
         h('svg', baseAttrs, [
           h('rect', { x: '4', y: '3.5', width: '16', height: '17', rx: '2.5', stroke: color, 'stroke-width': '1.8' }),
