@@ -47,8 +47,12 @@
       </header>
 
       <!-- Main content -->
-      <main class="flex-1">
-        <RouterView />
+      <main class="relative flex-1 overflow-hidden">
+        <RouterView v-slot="{ Component, route: activeRoute }">
+          <Transition :name="transitionName" mode="out-in">
+            <component :is="Component" :key="activeRoute.fullPath" class="route-view" />
+          </Transition>
+        </RouterView>
       </main>
 
       <!-- Floating bottom nav -->
@@ -87,8 +91,10 @@
 </template>
 
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
 import { computed, defineComponent, h, onMounted, ref } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
+import { useNavigationDirectionStore } from './stores/navigationDirection'
 
 type NavName = 'chats' | 'tasks' | 'responses' | 'create-task' | 'profile'
 type NavItem = { name: NavName; label: string; icon: string }
@@ -104,6 +110,9 @@ const navItems: NavItem[] = [
 const route = useRoute()
 const router = useRouter()
 const menuOpen = ref(false)
+const navigationStore = useNavigationDirectionStore()
+const { direction } = storeToRefs(navigationStore)
+const transitionName = computed(() => (direction.value === 'back' ? 'slide-back' : 'slide-forward'))
 
 /** Безопасные прокси к текущему роуту */
 const rName = computed(() => String((route as any)?.name ?? ''))
@@ -132,6 +141,7 @@ const headerTitle = computed(() => {
 })
 
 const handleBack = () => {
+  navigationStore.prepareDirectionOnce('back')
   if (window.history.length > 1) router.back()
   else router.push({ name: 'chats' })
 }
@@ -265,5 +275,52 @@ const SvgIcon = defineComponent({
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+}
+
+:global(.route-view) {
+  min-height: 100%;
+}
+
+:global(.slide-forward-enter-active),
+:global(.slide-forward-leave-active),
+:global(.slide-back-enter-active),
+:global(.slide-back-leave-active) {
+  transition: transform 260ms ease, opacity 260ms ease;
+}
+
+:global(.slide-forward-enter-active),
+:global(.slide-forward-leave-active),
+:global(.slide-back-enter-active),
+:global(.slide-back-leave-active) {
+  position: absolute;
+  inset: 0;
+}
+
+:global(.slide-forward-enter-from) {
+  transform: translateX(22%);
+  opacity: 0.35;
+}
+
+:global(.slide-forward-leave-to) {
+  transform: translateX(-14%);
+  opacity: 0;
+}
+
+:global(.slide-back-enter-from) {
+  transform: translateX(-22%);
+  opacity: 0.35;
+}
+
+:global(.slide-back-leave-to) {
+  transform: translateX(14%);
+  opacity: 0;
+}
+
+:global(.slide-forward-enter-to),
+:global(.slide-forward-leave-from),
+:global(.slide-back-enter-to),
+:global(.slide-back-leave-from) {
+  transform: translateX(0);
+  opacity: 1;
 }
 </style>
