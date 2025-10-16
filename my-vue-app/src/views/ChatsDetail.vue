@@ -212,7 +212,7 @@ function goBack() {
       </div>
     </header>
 
-    <main ref="messagesWrap" class="flex-1 overflow-y-auto overscroll-contain scroll-smooth px-3 pt-3 pb-24">
+    <main ref="messagesWrap" class="flex-1 overflow-y- overscroll-contain scroll-smooth px-3 pt-3 pb-24">
       <template v-if="thread.length">
         <div v-for="message in thread" :key="message.id" class="mb-2 flex w-full">
           <div
