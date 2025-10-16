@@ -76,7 +76,7 @@
 
     <main
       class="relative flex-1 overflow-hidden"
-      style="padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 5rem);"
+      :style="{ paddingBottom: mainPaddingBottom }"
     >
       <RouterView v-slot="{ Component, route: activeRoute }">
         <Transition :name="transitionName" mode="out-in">
@@ -86,7 +86,7 @@
     </main>
 
     <footer
-      v-if="!isLoginRoute"
+      v-if="!isLoginRoute && !isChatDetail"
       class="fixed inset-x-0 bottom-0 z-20 border-t border-black/10 bg-background-light/95 backdrop-blur dark:border-white/10 dark:bg-background-dark/95"
       style="padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.75rem);"
     >
@@ -190,6 +190,11 @@ const activeNavName = computed<NavName>(() => {
   if (rName.value === 'chat-detail') return 'chats'
   const found = navItems.find(item => item.name === rName.value)
   return found?.name ?? 'chats'
+})
+
+const mainPaddingBottom = computed(() => {
+  const base = isChatDetail.value ? '6rem' : '5rem'
+  return `calc(env(safe-area-inset-bottom, 0px) + ${base})`
 })
 
 const bubbleClass = (name: NavName) =>
