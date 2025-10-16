@@ -1,17 +1,17 @@
 {
- "name": "my-vue-app",
+  "name": "my-vue-app",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "engines": {
-    "node": "20.19.0"
+    "node": "20.x"
   },
   "scripts": {
     "dev": "vite",
-    "build": "run-p type-check \"build-only {@}\" --",
-    "preview": "vite preview",
+    "type-check": "vue-tsc --noEmit -p tsconfig.json",
     "build-only": "vite build",
-    "type-check": "vue-tsc --build"
+    "build": "run-p type-check build-only",
+    "preview": "vite preview --port 4173"
   },
   "dependencies": {
     "pinia": "^3.0.3",
