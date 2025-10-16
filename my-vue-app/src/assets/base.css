@@ -48,6 +48,17 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+input,
+textarea,
+select,
+button {
+  font-size: 16px;
+}
+
 @media (prefers-color-scheme: dark) {
   body {
     background-color: var(--color-background);
@@ -185,4 +196,8 @@ textarea:focus {
 
 .btn-icon:active {
   transform: translateY(1px);
+}
+
+.overscroll-contain {
+  overscroll-behavior-y: contain;
 }
