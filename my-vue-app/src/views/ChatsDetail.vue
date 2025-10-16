@@ -296,7 +296,7 @@ watch(draft, () => autoGrow())
           class="pointer-events-auto rounded-2xl border border-black/10 bg-white/70 shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-slate-900/60
                  supports-[backdrop-filter]:bg-white/50 supports-[backdrop-filter]:dark:bg-slate-900/40"
         >
-          <form class="flex items-end gap-2 p-8" @submit.prevent="handleSend">
+          <form class="flex items-end gap-2 p-4" @submit.prevent="handleSend">
             <!-- Скрепка (всегда) -->
             <button
               type="button"
