@@ -246,14 +246,7 @@ onMounted(() => {
             enterkeyhint="send"
           />
           <!-- Emoji toggle -->
-          <button
-            type="button"
-            class="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1 text-[16px] hover:bg-black/5 dark:hover:bg-white/10"
-            @click="showEmoji = !showEmoji"
-            aria-label="Открыть эмодзи"
-          >
-            <span aria-hidden="true">😊</span>
-          </button>
+     
 
           <!-- Emoji picker -->
           <div
