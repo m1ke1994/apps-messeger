@@ -48,14 +48,35 @@ const draft = ref('')
 const hasDraft = computed(() => draft.value.trim().length > 0)
 
 const showEmoji = ref(false)
-const emojis = ['😀', '😁', '😂', '🤣', '😊', '😍', '🤝', '👍', '🔥', '💡', '✅', '❗', '🎯', '🚀', '💼', '🧩']
+const emojis = ['😀','😁','😂','🤣','😊','😍','🤝','👍','🔥','💡','✅','❗','🎯','🚀','💼','🧩']
 
+// === ГЛАВНОЕ: умный автогров с порогом 100 слов ===
+function countWords(s: string) {
+  const t = s.trim()
+  if (!t) return 0
+  return t.split(/\s+/u).length
+}
 function autoGrow(event?: Event) {
   const el = event ? (event.target as HTMLTextAreaElement) : textareaEl.value
   if (!el) return
+
+  const words = countWords(draft.value)
+  const limitPxWhenLong = 180             // высота при >100 слов
+  const softMaxWhenShort = Math.floor(window.innerHeight * 0.5) // 50vh
+
+  // сбрасываем, меряем естественную высоту
   el.style.height = 'auto'
-  const maxHeight = 180
-  el.style.height = `${Math.min(el.scrollHeight, maxHeight)}px`
+
+  if (words <= 100) {
+    // растём до полного вмещения, но разумно ограничим 50vh
+    const next = Math.min(el.scrollHeight, softMaxWhenShort)
+    el.style.overflowY = el.scrollHeight > softMaxWhenShort ? 'auto' : 'hidden'
+    el.style.height = `${next}px`
+  } else {
+    // длинные тексты — фиксируем «компактную» высоту со скроллом
+    el.style.overflowY = 'auto'
+    el.style.height = `${Math.min(el.scrollHeight, limitPxWhenLong)}px`
+  }
 }
 
 function addEmoji(emoji: string) {
@@ -76,25 +97,34 @@ async function handleSend() {
     text,
   })
   draft.value = ''
-  if (textareaEl.value) textareaEl.value.style.height = 'auto'
+  if (textareaEl.value) {
+    textareaEl.value.style.height = 'auto'
+    textareaEl.value.style.overflowY = 'hidden'
+  }
   ;(document.activeElement as HTMLElement | null)?.blur?.()
   showEmoji.value = false
 }
 
 const fileInputAny = ref<HTMLInputElement | null>(null)
 const fileInputImg = ref<HTMLInputElement | null>(null)
+function openFilePickerAny() { fileInputAny.value?.click() }
+function openFilePickerImg() { fileInputImg.value?.click() }
 
-function openFilePickerAny() {
-  fileInputAny.value?.click()
-}
-function openFilePickerImg() {
-  fileInputImg.value?.click()
+function addImageFromBlob(blob: Blob) {
+  const url = URL.createObjectURL(blob)
+  messages.value.push({
+    id: crypto.randomUUID(),
+    chatId: chatId.value,
+    authorId: meId,
+    createdAt: new Date().toISOString(),
+    type: 'image',
+    imageUrl: url,
+  })
 }
 
 function onFilesPicked(e: Event, onlyImages = false) {
   const files = (e.target as HTMLInputElement).files
   if (!files || !files.length) return
-
   for (const file of Array.from(files)) {
     const url = URL.createObjectURL(file)
     if (file.type.startsWith('image/')) {
@@ -121,10 +151,43 @@ function onFilesPicked(e: Event, onlyImages = false) {
   ;(e.target as HTMLInputElement).value = ''
 }
 
+const isDragOver = ref(false)
+function onDropFiles(e: DragEvent) {
+  isDragOver.value = false
+  if (!e.dataTransfer) return
+  const files = Array.from(e.dataTransfer.files || [])
+  if (!files.length) return
+  for (const file of files) {
+    if (file.type.startsWith('image/')) addImageFromBlob(file)
+    else {
+      const url = URL.createObjectURL(file)
+      messages.value.push({
+        id: crypto.randomUUID(),
+        chatId: chatId.value,
+        authorId: meId,
+        createdAt: new Date().toISOString(),
+        type: 'file',
+        fileName: file.name,
+        fileUrl: url,
+      })
+    }
+  }
+}
+
+function onPaste(e: ClipboardEvent) {
+  const items = e.clipboardData?.items
+  if (!items) return
+  for (const it of items) {
+    if (it.type.startsWith('image/')) {
+      const blob = it.getAsFile()
+      if (blob) addImageFromBlob(blob)
+    }
+  }
+}
+
 const recording = ref(false)
 const mediaRecorder = ref<MediaRecorder | null>(null)
 const chunks: BlobPart[] = []
-
 async function toggleRecord() {
   if (!recording.value) {
     try {
@@ -146,8 +209,8 @@ async function toggleRecord() {
       }
       mediaRecorder.value.start()
       recording.value = true
-    } catch (error) {
-      console.error('Microphone permission error:', error)
+    } catch (e) {
+      console.error('Microphone permission error:', e)
       recording.value = false
     }
   } else {
@@ -157,7 +220,7 @@ async function toggleRecord() {
   }
 }
 
-// небольшой автоскролл к последнему сообщению
+// автоскролл
 const mainEl = ref<HTMLElement | null>(null)
 watch(thread, () => {
   requestAnimationFrame(() => {
@@ -168,23 +231,35 @@ onMounted(() => {
   requestAnimationFrame(() => {
     mainEl.value?.scrollTo({ top: mainEl.value.scrollHeight })
   })
+  // первичный расчёт высоты поля
+  autoGrow()
 })
+
+// также пересчитываем высоту при каждом изменении драфта (на случай программных вставок)
+watch(draft, () => autoGrow())
 </script>
 
 <template>
-  <div class="flex min-h-[100dvh] flex-col bg-background-light dark:bg-background-dark">
-    <!-- Лента -->
-    <main ref="mainEl" class="flex-1 overflow-y-auto overscroll-contain scroll-smooth px-3 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+6rem)]">
+  <div class="flex min-h-[100dvh] flex-col bg-gradient-to-b from-white to-slate-50/70 dark:from-slate-900 dark:to-slate-950">
+    <main
+      ref="mainEl"
+      class="flex-1 overflow-y-auto overscroll-contain scroll-smooth px-3 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+7.5rem)]"
+      :class="isDragOver ? 'ring-2 ring-primary/40 rounded-2xl' : ''"
+      @dragover.prevent="isDragOver = true"
+      @dragleave.prevent="isDragOver = false"
+      @drop.prevent="onDropFiles"
+      @paste="onPaste"
+    >
       <template v-if="thread.length">
         <div v-for="message in thread" :key="message.id" class="mb-2 flex w-full">
           <div
-            class="max-w-[75%] rounded-2xl px-3 py-2 shadow-sm"
+            class="max-w-[78%] rounded-2xl px-3 py-2 shadow-sm transition-transform duration-150 will-change-transform"
             :class="message.authorId === meId
               ? 'ml-auto bg-primary text-white'
-              : 'mr-auto border border-black/10 bg-white text-slate-900 dark:border-white/10 dark:bg-white/10 dark:text-white'"
+              : 'mr-auto border border-black/10 bg-white/90 text-slate-900 dark:border-white/10 dark:bg-white/10 dark:text-white backdrop-blur supports-[backdrop-filter]:bg-white/40 supports-[backdrop-filter]:dark:bg-white/5'"
           >
             <template v-if="message.type === 'text'">
-              <p class="whitespace-pre-line">{{ message.text }}</p>
+              <p class="whitespace-pre-line leading-relaxed">{{ message.text }}</p>
             </template>
 
             <template v-else-if="message.type === 'image'">
@@ -192,7 +267,7 @@ onMounted(() => {
             </template>
 
             <template v-else-if="message.type === 'file'">
-              <a :href="message.fileUrl" download class="break-all underline">{{ message.fileName || 'Файл' }}</a>
+              <a :href="message.fileUrl" download class="break-all underline">📎 {{ message.fileName || 'Файл' }}</a>
             </template>
 
             <template v-else-if="message.type === 'audio'">
@@ -214,116 +289,140 @@ onMounted(() => {
       </div>
     </main>
 
-    <!-- Футер с двумя состояниями -->
-    <footer
-      class="fixed inset-x-0 bottom-0 z-30 border-t border-black/10 bg-white/90 px-3 pb-[env(safe-area-inset-bottom)] pt-2 backdrop-blur dark:border-white/10 dark:bg-slate-900/90"
-    >
-      <form class="flex items-end gap-2" @submit.prevent="handleSend">
-        <!-- СКРЕПКА (всегда) -->
-        <button
-          type="button"
-          class="rounded-xl p-2 text-[16px] hover:bg-black/5 dark:hover:bg-white/10"
-          @click="openFilePickerAny"
-          aria-label="Прикрепить файл"
+    <!-- Плавающий современный композер -->
+    <div class="pointer-events-none fixed inset-x-0 bottom-0 z-30 pb-[max(env(safe-area-inset-bottom),16px)]">
+      <div class="mx-auto w-full max-w-3xl px-4">
+        <footer
+          class="pointer-events-auto rounded-2xl border border-black/10 bg-white/70 shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-slate-900/60
+                 supports-[backdrop-filter]:bg-white/50 supports-[backdrop-filter]:dark:bg-slate-900/40"
         >
-          <!-- paperclip -->
-          <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-            <path d="M21.44 11.05l-8.49 8.49a5.5 5.5 0 01-7.78-7.78l9.19-9.19a3.5 3.5 0 015 5L10 16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
-        </button>
+          <form class="flex items-end gap-2 p-8" @submit.prevent="handleSend">
+            <!-- Скрепка (всегда) -->
+            <button
+              type="button"
+              class="group rounded-xl p-2 text-[16px] transition hover:bg-black/5 active:scale-95 dark:hover:bg-white/10"
+              @click="openFilePickerAny"
+              aria-label="Прикрепить файл"
+              title="Прикрепить файл"
+            >
+              <svg class="h-6 w-6 transition-transform group-active:scale-95" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M21.44 11.05l-8.49 8.49a5.5 5.5 0 01-7.78-7.78l9.19-9.19a3.5 3.5 0 015 5L10 16"
+                      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </button>
 
-        <!-- ТЕКСТОВОЕ ПОЛЕ -->
-        <div class="relative flex-1">
-          <textarea
-            ref="textareaEl"
-            v-model="draft"
-            rows="1"
-            placeholder="Напишите сообщение…"
-            class="block w-full resize-none rounded-xl border border-black/10 bg-white px-3 py-2 pr-10 text-[16px] leading-6 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/30 dark:border-white/10 dark:bg-white/5 dark:text-white"
-            @input="autoGrow"
-            @keydown.enter.exact.prevent="handleSend"
-            inputmode="text"
-            enterkeyhint="send"
-          />
-          <!-- Emoji toggle -->
-     
+            <!-- Поле ввода -->
+            <div class="relative flex-1">
+              <textarea
+                ref="textareaEl"
+                v-model="draft"
+                rows="1"
+                placeholder="Сообщение…"
+                class="grow-height-smooth block w-full resize-none rounded-xl border border-transparent bg-white/80 px-3 py-2 pr-12 text-[16px] leading-6 shadow-sm
+                       focus:border-primary/30 focus:outline-none focus:ring-2 focus:ring-primary/20
+                       dark:bg-white/5 dark:text-white"
+                @input="autoGrow"
+                @keydown.enter.exact.prevent="handleSend"
+                inputmode="text"
+                enterkeyhint="send"
+              />
+          
 
-          <!-- Emoji picker -->
-          <div
-            v-if="showEmoji"
-            class="absolute bottom-full mb-2 max-w-[260px] rounded-xl border border-black/10 bg-white p-2 shadow-lg dark:border-white/10 dark:bg-slate-900"
-          >
-            <div class="flex flex-wrap gap-1">
-              <button
-                v-for="emoji in emojis"
-                :key="emoji"
-                type="button"
-                class="rounded-md px-2 py-1 text-[16px] hover:bg-black/5 dark:hover:bg-white/10"
-                @click="addEmoji(emoji)"
+              <!-- Emoji picker -->
+              <div
+                v-if="showEmoji"
+                class="absolute bottom-full mb-2 max-w-[260px] rounded-xl border border-black/10 bg-white p-2 shadow-xl dark:border-white/10 dark:bg-slate-900"
               >
-                {{ emoji }}
-              </button>
+                <div class="flex flex-wrap gap-1">
+                  <button
+                    v-for="emoji in emojis"
+                    :key="emoji"
+                    type="button"
+                    class="rounded-md px-2 py-1 text-[16px] transition hover:bg-black/5 dark:hover:bg-white/10"
+                    @click="addEmoji(emoji)"
+                  >
+                    {{ emoji }}
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
 
-        <!-- ПРАВАЯ ЧАСТЬ -->
-        <!-- Состояние 1: НЕТ текста -> показываем Фото + Голос -->
-        <template v-if="!hasDraft">
-          <!-- Фото -->
-          <button
-            type="button"
-            class="rounded-xl p-2 text-[16px] hover:bg-black/5 dark:hover:bg-white/10"
-            @click="openFilePickerImg"
-            aria-label="Отправить фото"
-          >
-            <!-- camera -->
-            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-              <path d="M4 7.5A2.5 2.5 0 0 1 6.5 5h2l1.2-1.6A2 2 0 0 1 10.3 3h3.4a2 2 0 0 1 1.6.8L16.5 5H18A2.5 2.5 0 0 1 20.5 7.5V17A2 2 0 0 1 18.5 19h-13A2 2 0 0 1 3.5 17V7.5Z" stroke-width="2" stroke-linejoin="round"/>
-              <circle cx="12" cy="12" r="3.5" stroke-width="2"/>
-            </svg>
-          </button>
+            <!-- Правая группа: два состояния -->
+            <transition name="fade-scale" mode="out-in">
+              <div v-if="!hasDraft" key="tools" class="flex items-center gap-1">
+                <button
+                  type="button"
+                  class="group rounded-xl p-2 text-[16px] transition hover:bg-black/5 active:scale-95 dark:hover:bg-white/10"
+                  @click="openFilePickerImg"
+                  aria-label="Фото"
+                  title="Фото"
+                >
+                  <svg class="h-6 w-6 transition-transform group-active:scale-95" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M4 7.5A2.5 2.5 0 0 1 6.5 5h2l1.2-1.6A2 2 0 0 1 10.3 3h3.4a2 2 0 0 1 1.6.8L16.5 5H18A2.5 2.5 0 0 1 20.5 7.5V17A2 2 0 0 1 18.5 19h-13A2 2 0 0 1 3.5 17V7.5Z" stroke-width="2" stroke-linejoin="round"/>
+                    <circle cx="12" cy="12" r="3.5" stroke-width="2"/>
+                  </svg>
+                </button>
 
-          <!-- Голос -->
-          <button
-            type="button"
-            class="rounded-xl p-2 text-[16px] hover:bg-black/5 dark:hover:bg-white/10"
-            :class="recording ? 'animate-pulse text-rose-600' : ''"
-            @click="toggleRecord"
-            aria-label="Голосовое сообщение"
-          >
-            <svg v-if="!recording" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-              <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-              <path d="M19 10a7 7 0 0 1-14 0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-              <path d="M12 17v5" stroke-width="2" stroke-linecap="round" />
-            </svg>
-            <svg v-else class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <circle cx="12" cy="12" r="6" />
-            </svg>
-          </button>
-        </template>
+                <button
+                  type="button"
+                  class="group rounded-xl p-2 text-[16px] transition hover:bg-black/5 active:scale-95 dark:hover:bg-white/10"
+                  :class="recording ? 'animate-pulse text-rose-600' : ''"
+                  @click="toggleRecord"
+                  aria-label="Голос"
+                  title="Голос"
+                >
+                  <svg v-if="!recording" class="h-6 w-6 transition-transform group-active:scale-95" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    <path d="M19 10a7 7 0 0 1-14 0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    <path d="M12 17v5" stroke-width="2" stroke-linecap="round" />
+                  </svg>
+                  <svg v-else class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
+                    <circle cx="12" cy="12" r="6" />
+                  </svg>
+                </button>
+              </div>
 
-        <!-- Состояние 2: ЕСТЬ текст -> показываем кнопку-отправку (самолёт) -->
-        <template v-else>
-          <button
-            type="submit"
-            class="h-10 shrink-0 rounded-xl bg-primary px-4 font-semibold text-white text-[16px] hover:opacity-90 active:translate-y-px disabled:opacity-50 flex items-center gap-2"
-            :disabled="!hasDraft"
-            aria-label="Отправить сообщение"
-          >
-            <!-- airplane -->
-            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
-              <path d="M22 2L11 13" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M22 2l-7 20-4-9-9-4 20-7Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <span class="sr-only">Отправить</span>
-          </button>
-        </template>
+              <div v-else key="send" class="flex items-center">
+                <button
+                  type="submit"
+                  class="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-primary px-4 font-semibold text-white text-[16px]
+                         transition hover:opacity-90 active:translate-y-px disabled:opacity-50"
+                  :disabled="!hasDraft"
+                  aria-label="Отправить"
+                  title="Отправить"
+                >
+                  <svg class="h-5 w-5 -rotate-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M22 2L11 13" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M22 2l-7 20-4-9-9-4 20-7Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+              </div>
+            </transition>
 
-        <!-- Хиддены для выбора файлов -->
-        <input ref="fileInputAny" type="file" class="hidden" multiple @change="(e) => onFilesPicked(e, false)" />
-        <input ref="fileInputImg" type="file" class="hidden" accept="image/*" multiple @change="(e) => onFilesPicked(e, true)" />
-      </form>
-    </footer>
+            <!-- Хиддены для выбора -->
+            <input ref="fileInputAny" type="file" class="hidden" multiple @change="(e) => onFilesPicked(e, false)" />
+            <input ref="fileInputImg" type="file" class="hidden" accept="image/*" multiple @change="(e) => onFilesPicked(e, true)" />
+          </form>
+        </footer>
+      </div>
+    </div>
   </div>
 </template>
+
+<style scoped>
+/* плавная смена высоты поля */
+.grow-height-smooth {
+  transition: height 120ms ease;
+}
+
+/* плавные появления инструментов */
+.fade-scale-enter-active,
+.fade-scale-leave-active {
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+.fade-scale-enter-from,
+.fade-scale-leave-to {
+  opacity: 0;
+  transform: scale(0.96);
+}
+</style>
