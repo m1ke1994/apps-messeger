@@ -12,6 +12,14 @@ const router = createRouter({
       component: () => import('../views/Chats.vue'),
       meta: { title: 'Чаты' },
     },
+    // ✅ Детальная страница чата
+    {
+  path: '/chats/:id',            // ⬅ без (\d+)
+  name: 'chat-detail',
+  component: () => import('../views/ChatsDetail.vue'),
+  props: true,
+  meta: { title: 'Диалог', showBack: true },
+},
     {
       path: '/tasks',
       name: 'tasks',
@@ -21,7 +29,7 @@ const router = createRouter({
     {
       path: '/tasks/:id(\\d+)',
       name: 'task-detail',
-      component: () => import('../views/TaskDetail.vue'), // ✅ lazy import вместо необъявленного TaskDetail
+      component: () => import('../views/TaskDetail.vue'),
       props: true,
       meta: { title: 'Задача', showBack: true },
     },
@@ -49,7 +57,8 @@ const router = createRouter({
       component: () => import('../views/Settings.vue'),
       meta: { title: 'Настройки', showBack: true },
     },
-    { path: '/login',
+    {
+      path: '/login',
       name: 'login',
       component: () => import('../views/Login.vue'),
       meta: { layout: 'auth', title: 'Вход' },
