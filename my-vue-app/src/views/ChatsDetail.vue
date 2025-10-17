@@ -271,11 +271,11 @@ const mainPaddingStyle = computed(() => ({
 </script>
 
 <template>
-  <div class="flex min-h-dvh flex-col bg-gradient-to-b from-white to-slate-50/70 dark:from-slate-900 dark:to-slate-950">
+  <div class="flex min-h-dvh flex-col bg-transparent dark:bg-slate-900">
     <main
       ref="mainEl"
-      class="flex flex-1 flex-col overflow-y-auto overscroll-contain scroll-smooth bg-white px-3 pt-3 transition-shadow dark:bg-slate-900"
-      :class="isDragOver ? 'ring-2 ring-primary/40 rounded-2xl shadow-md dark:ring-primary/30' : ''"
+      class="flex flex-1 flex-col overflow-y-auto overscroll-contain scroll-smooth bg-е px-3 pt-3 transition-shadow dark:bg-slate-900"
+      :class="isDragOver ? 'ring-2 ring-primary/40 shadow-md dark:ring-primary/30' : ''"
       :style="mainPaddingStyle"
       @dragover.prevent="isDragOver = true"
       @dragleave.prevent="isDragOver = false"
@@ -283,7 +283,7 @@ const mainPaddingStyle = computed(() => ({
       @paste="onPaste"
     >
       <div class="mx-auto flex w-full max-w-3xl flex-1 flex-col pb-4">
-        <!-- Растяжной враппер: тянет контент на всю высоту и прижимает тред к низу -->
+        <!-- Растяжной враппер: тянет контент по высоте и прижимает тред к низу -->
         <div class="flex min-h-0 flex-1 flex-col justify-end">
           <template v-if="thread.length">
             <div v-for="message in thread" :key="message.id" class="mb-2 flex w-full">
@@ -298,11 +298,11 @@ const mainPaddingStyle = computed(() => ({
                 </template>
 
                 <template v-else-if="message.type === 'image'">
-                  <img :src="message.imageUrl" alt="����ࠦ����" class="max-h-64 w-auto rounded-xl object-contain" />
+                  <img :src="message.imageUrl" alt="Изображение" class="max-h-64 w-auto rounded-xl object-contain" />
                 </template>
 
                 <template v-else-if="message.type === 'file'">
-                  <a :href="message.fileUrl" download class="break-all underline">?? {{ message.fileName || '����' }}</a>
+                  <a :href="message.fileUrl" download class="break-all underline">📎 {{ message.fileName || 'Файл' }}</a>
                 </template>
 
                 <template v-else-if="message.type === 'audio'">
@@ -318,8 +318,8 @@ const mainPaddingStyle = computed(() => ({
 
           <div v-else class="flex flex-1 items-center justify-center px-6 text-center text-slate-500 dark:text-slate-400">
             <div class="max-w-sm">
-              <p class="text-base font-medium">����� �㤥� ��� ����� ᮮ�饭��</p>
-              <p class="mt-1 text-sm">������ ��ࢮ� ᮮ�饭�� ���� - ��� ��஥� ������.</p>
+              <p class="text-base font-medium">Здесь будет ваша история сообщений</p>
+              <p class="mt-1 text-sm">Напишите первое сообщение ниже — оно откроет диалог.</p>
             </div>
           </div>
         </div>
@@ -331,8 +331,7 @@ const mainPaddingStyle = computed(() => ({
     <div ref="composerWrapEl" class="pointer-events-none fixed inset-x-0 bottom-0 z-30 pb-[max(env(safe-area-inset-bottom),16px)]">
       <div class="mx-auto w-full max-w-3xl px-4">
         <footer
-          class="pointer-events-auto rounded-2xl border border-black/10 bg-white/70 shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-slate-900/60
-                 supports-[backdrop-filter]:bg-white/50 supports-[backdrop-filter]:dark:bg-slate-900/40"
+          class="pointer-events-auto rounded-2xl border border-black/10 bg-white shadow-lg dark:border-white/10 dark:bg-slate-900"
         >
           <form class="flex items-end gap-2 p-2" @submit.prevent="handleSend">
             <button
@@ -402,7 +401,7 @@ const mainPaddingStyle = computed(() => ({
                   type="button"
                   class="group rounded-xl p-2 text-[16px] transition hover:bg-black/5 active:scale-95 dark:hover:bg-white/10"
                   :class="recording ? 'animate-pulse text-rose-600' : ''"
-                  @click="toggleRecord" aria-label="Голос" title="Голос"
+                  @click="toggleRecord" aria-label="Голосовое сообщение" title="Голосовое сообщение"
                 >
                   <svg v-if="!recording" class="h-6 w-6 transition-transform group-active:scale-95" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
