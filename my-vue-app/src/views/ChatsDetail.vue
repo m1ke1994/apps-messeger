@@ -68,7 +68,6 @@ function autoGrow(event?: Event) {
   const el = event ? (event.target as HTMLTextAreaElement) : textareaEl.value
   if (!el) return
 
-  // Если текст пуст — полностью сбрасываем инлайновые размеры
   if (!draft.value.trim()) {
     el.style.removeProperty('height')
     el.style.overflowY = 'hidden'
@@ -109,7 +108,6 @@ async function handleSend() {
     text,
   })
 
-  // Полный сброс: сначала очищаем текст, ждём обновления DOM, потом снимаем инлайновые размеры
   draft.value = ''
   await nextTick()
   resetComposerHeight()
@@ -265,7 +263,6 @@ watch(thread, () => {
   })
 })
 
-// Пересчитываем высоту при каждом изменении текста
 watch(draft, () => autoGrow())
 
 const mainPaddingStyle = computed(() => ({
@@ -274,10 +271,10 @@ const mainPaddingStyle = computed(() => ({
 </script>
 
 <template>
-  <div class="flex min-h-[100dvh] flex-col bg-gradient-to-b from-white to-slate-50/70 dark:from-slate-900 dark:to-slate-950">
+  <div class="flex min-h-dvh flex-col bg-gradient-to-b from-white to-slate-50/70 dark:from-slate-900 dark:to-slate-950">
     <main
       ref="mainEl"
-      class="flex-1 overflow-y-auto overscroll-contain scroll-smooth px-3 pt-3"
+      class="flex flex-1 flex-col overflow-y-auto overscroll-contain scroll-smooth px-3 pt-3"
       :style="mainPaddingStyle"
       :class="isDragOver ? 'ring-2 ring-primary/40 rounded-2xl' : ''"
       @dragover.prevent="isDragOver = true"
@@ -285,41 +282,44 @@ const mainPaddingStyle = computed(() => ({
       @drop.prevent="onDropFiles"
       @paste="onPaste"
     >
-      <template v-if="thread.length">
-        <div v-for="message in thread" :key="message.id" class="mb-2 flex w-full">
-          <div
-            class="max-w-[78%] rounded-2xl px-3 py-2 shadow-sm transition-transform duration-150 will-change-transform"
-            :class="message.authorId === meId
-              ? 'ml-auto bg-primary text-white'
-              : 'mr-auto border border-black/10 bg-white/90 text-slate-900 dark:border-white/10 dark:bg-white/10 dark:text-white backdrop-blur supports-[backdrop-filter]:bg-white/40 supports-[backdrop-filter]:dark:bg-white/5'"
-          >
-            <template v-if="message.type === 'text'">
-              <p class="whitespace-pre-line leading-relaxed break-words">{{ message.text }}</p>
-            </template>
+      <!-- Растяжной враппер: тянет контент на всю высоту и прижимает тред к низу -->
+      <div class="min-h-full flex flex-col justify-end">
+        <template v-if="thread.length">
+          <div v-for="message in thread" :key="message.id" class="mb-2 flex w-full">
+            <div
+              class="max-w-[78%] rounded-2xl px-3 py-2 shadow-sm transition-transform duration-150 will-change-transform"
+              :class="message.authorId === meId
+                ? 'ml-auto bg-primary text-white'
+                : 'mr-auto border border-black/10 bg-white/90 text-slate-900 dark:border-white/10 dark:bg-white/10 dark:text-white backdrop-blur supports-[backdrop-filter]:bg-white/40 supports-[backdrop-filter]:dark:bg-white/5'"
+            >
+              <template v-if="message.type === 'text'">
+                <p class="whitespace-pre-line break-words leading-relaxed">{{ message.text }}</p>
+              </template>
 
-            <template v-else-if="message.type === 'image'">
-              <img :src="message.imageUrl" alt="Изображение" class="max-h-64 w-auto rounded-xl object-contain" />
-            </template>
+              <template v-else-if="message.type === 'image'">
+                <img :src="message.imageUrl" alt="Изображение" class="max-h-64 w-auto rounded-xl object-contain" />
+              </template>
 
-            <template v-else-if="message.type === 'file'">
-              <a :href="message.fileUrl" download class="break-all underline">📎 {{ message.fileName || 'Файл' }}</a>
-            </template>
+              <template v-else-if="message.type === 'file'">
+                <a :href="message.fileUrl" download class="break-all underline">📎 {{ message.fileName || 'Файл' }}</a>
+              </template>
 
-            <template v-else-if="message.type === 'audio'">
-              <audio :src="message.audioUrl" controls class="w-56" />
-            </template>
+              <template v-else-if="message.type === 'audio'">
+                <audio :src="message.audioUrl" controls class="w-56" />
+              </template>
 
-            <div class="mt-1 text-[10px] opacity-70">
-              {{ new Date(message.createdAt).toLocaleTimeString() }}
+              <div class="mt-1 text-[10px] opacity-70">
+                {{ new Date(message.createdAt).toLocaleTimeString() }}
+              </div>
             </div>
           </div>
-        </div>
-      </template>
+        </template>
 
-      <div v-else class="flex h-full items-center justify-center px-6 text-center text-slate-500 dark:text-slate-400">
-        <div class="max-w-sm">
-          <p class="text-base font-medium">Здесь будет ваша история сообщений</p>
-          <p class="mt-1 text-sm">Напишите первое сообщение ниже — оно откроет диалог.</p>
+        <div v-else class="flex flex-1 items-center justify-center px-6 text-center text-slate-500 dark:text-slate-400">
+          <div class="max-w-sm">
+            <p class="text-base font-medium">Здесь будет ваша история сообщений</p>
+            <p class="mt-1 text-sm">Напишите первое сообщение ниже — оно откроет диалог.</p>
+          </div>
         </div>
       </div>
     </main>
