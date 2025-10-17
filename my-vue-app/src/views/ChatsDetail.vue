@@ -274,16 +274,16 @@ const mainPaddingStyle = computed(() => ({
   <div class="flex min-h-dvh flex-col bg-gradient-to-b from-white to-slate-50/70 dark:from-slate-900 dark:to-slate-950">
     <main
       ref="mainEl"
-      class="flex flex-1 flex-col overflow-y-auto overscroll-contain scroll-smooth px-3 pt-3"
+      class="mx-auto flex w-full max-w-3xl flex-1 flex-col overflow-y-auto overscroll-contain scroll-smooth rounded-2xl border border-black/10 bg-white px-4 pt-4 shadow-sm transition-shadow dark:border-white/10 dark:bg-slate-900 min-h-0"
       :style="mainPaddingStyle"
-      :class="isDragOver ? 'ring-2 ring-primary/40 rounded-2xl' : ''"
+      :class="isDragOver ? 'ring-2 ring-primary/40 shadow-md dark:ring-primary/30' : ''"
       @dragover.prevent="isDragOver = true"
       @dragleave.prevent="isDragOver = false"
       @drop.prevent="onDropFiles"
       @paste="onPaste"
     >
       <!-- Растяжной враппер: тянет контент на всю высоту и прижимает тред к низу -->
-      <div class="min-h-full flex flex-col justify-end">
+      <div class="flex min-h-full flex-1 flex-col justify-end">
         <template v-if="thread.length">
           <div v-for="message in thread" :key="message.id" class="mb-2 flex w-full">
             <div
