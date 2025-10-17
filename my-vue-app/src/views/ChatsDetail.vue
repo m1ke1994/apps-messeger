@@ -274,17 +274,15 @@ const mainPaddingStyle = computed(() => ({
   <div class="flex min-h-dvh flex-col bg-gradient-to-b from-white to-slate-50/70 dark:from-slate-900 dark:to-slate-950">
     <main
       ref="mainEl"
-      class="flex flex-1 flex-col overflow-y-auto overscroll-contain scroll-smooth bg-white px-3 pt-3"
+      class="flex flex-1 flex-col overflow-y-auto overscroll-contain scroll-smooth bg-white px-3 pt-3 transition-shadow dark:bg-slate-900"
+      :class="isDragOver ? 'ring-2 ring-primary/40 rounded-2xl shadow-md dark:ring-primary/30' : ''"
       :style="mainPaddingStyle"
       @dragover.prevent="isDragOver = true"
       @dragleave.prevent="isDragOver = false"
       @drop.prevent="onDropFiles"
       @paste="onPaste"
     >
-      <div
-        class="mx-auto flex w-full max-w-3xl flex-1 flex-col overflow-hidden rounded-2xl bord bg-white p-4 shadow-sm transition-shadow dark:border-white/10 dark:bg-slate-900 min-h-0"
-        :class="isDragOver ? 'ring-2 ring-primary/40 shadow-md dark:ring-primary/30' : ''"
-      >
+      <div class="mx-auto flex w-full max-w-3xl flex-1 flex-col pb-4">
         <!-- Растяжной враппер: тянет контент на всю высоту и прижимает тред к низу -->
         <div class="flex min-h-0 flex-1 flex-col justify-end">
           <template v-if="thread.length">
@@ -300,11 +298,11 @@ const mainPaddingStyle = computed(() => ({
                 </template>
 
                 <template v-else-if="message.type === 'image'">
-                  <img :src="message.imageUrl" alt="Изображение" class="max-h-64 w-auto rounded-xl object-contain" />
+                  <img :src="message.imageUrl" alt="����ࠦ����" class="max-h-64 w-auto rounded-xl object-contain" />
                 </template>
 
                 <template v-else-if="message.type === 'file'">
-                  <a :href="message.fileUrl" download class="break-all underline">📎 {{ message.fileName || 'Файл' }}</a>
+                  <a :href="message.fileUrl" download class="break-all underline">?? {{ message.fileName || '����' }}</a>
                 </template>
 
                 <template v-else-if="message.type === 'audio'">
@@ -320,8 +318,8 @@ const mainPaddingStyle = computed(() => ({
 
           <div v-else class="flex flex-1 items-center justify-center px-6 text-center text-slate-500 dark:text-slate-400">
             <div class="max-w-sm">
-              <p class="text-base font-medium">Здесь будет ваша история сообщений</p>
-              <p class="mt-1 text-sm">Напишите первое сообщение ниже — оно откроет диалог.</p>
+              <p class="text-base font-medium">����� �㤥� ��� ����� ᮮ�饭��</p>
+              <p class="mt-1 text-sm">������ ��ࢮ� ᮮ�饭�� ���� - ��� ��஥� ������.</p>
             </div>
           </div>
         </div>
