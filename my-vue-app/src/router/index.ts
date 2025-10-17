@@ -1,10 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useNavigationDirectionStore } from '../stores/navigationDirection'
+import { useUserStore } from '../stores/userStore'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    { path: '/', redirect: '/chats' },
+    { path: '/', redirect: '/auth' },
 
     {
       path: '/chats',
@@ -63,11 +64,24 @@ const router = createRouter({
       component: () => import('../views/AuthPage.vue'),
       meta: { layout: 'auth', title: 'Авторизация' }
     },
-    { path: '/:pathMatch(.*)*', redirect: '/chats' }
+    { path: '/:pathMatch(.*)*', redirect: '/auth' }
   ]
 })
 
-router.beforeEach((_to, _from, next) => {
+router.beforeEach((to, _from, next) => {
+  const userStore = useUserStore()
+  const isAuthenticated = Boolean(userStore.profile)
+
+  if (to.name === 'auth' && isAuthenticated) {
+    next({ name: 'chats', replace: true })
+    return
+  }
+
+  if (to.name !== 'auth' && !isAuthenticated) {
+    next({ name: 'auth', replace: true })
+    return
+  }
+
   const navigationStore = useNavigationDirectionStore()
   const manualDirection = navigationStore.consumePreparedDirection()
   navigationStore.setDirection(manualDirection ?? 'forward')
