@@ -56,20 +56,37 @@
 
       <div class="flex min-w-[4.5rem] items-center justify-end gap-2">
         <template v-if="isChatDetail">
-          <button
-            type="button"
-            class="flex h-10 w-10 items-center justify-center rounded-full transition hover:bg-black/5 dark:hover:bg-white/10"
-            aria-label="Аудиозвонок"
-          >
-            <SvgIcon name="phone" :size="22" />
-          </button>
-          <button
-            type="button"
-            class="flex h-10 w-10 items-center justify-center rounded-full transition hover:bg-black/5 dark:hover:bg-white/10"
-            aria-label="Видеозвонок"
-          >
-            <SvgIcon name="video" :size="24" />
-          </button>
+  <!-- ЗАМЕНА ТОЛЬКО ЭТОГО УЧАСТКА (кнопка аудиозвонка) -->
+<!-- Аудиозвонок -->
+<button
+  type="button"
+  class="flex h-10 w-10 items-center justify-center rounded-full bg-[#047857] text-white transition hover:bg-[#059669] active:scale-95"
+  aria-label="Аудиозвонок"
+>
+  <svg xmlns="http://www.w3.org/2000/svg"
+       viewBox="0 0 24 24"
+       class="h-[22px] w-[22px]"
+       fill="currentColor"
+       aria-hidden="true">
+    <path d="M6.62 10.79a15.05 15.05 0 006.59 6.59c.62.3 1.36.19 1.85-.3l1.2-1.2a1 1 0 011.05-.24l2.72.91a1 1 0 01.67.95v2.13a2 2 0 01-2.18 2A18 18 0 013 6.48 2 2 0 015 4.3h2.13a1 1 0 01.95.67l.91 2.72a1 1 0 01-.24 1.05l-1.2 1.2c-.49.49-.61 1.23-.3 1.85z"/>
+  </svg>
+</button>
+
+<!-- Видеозвонок -->
+<button
+  type="button"
+  class="flex h-10 w-10 items-center justify-center rounded-full bg-[#047857] text-white transition hover:bg-[#059669] active:scale-95"
+  aria-label="Видеозвонок"
+>
+  <svg xmlns="http://www.w3.org/2000/svg"
+       viewBox="0 0 24 24"
+       class="h-[24px] w-[24px]"
+       fill="currentColor"
+       aria-hidden="true">
+    <path d="M3 6a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v2.586l2.293-2.293A1 1 0 0 1 20 7v10a1 1 0 0 1-1.707.707L16 15.414V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6z"/>
+  </svg>
+</button>
+
         </template>
       </div>
     </header>
