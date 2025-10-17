@@ -1,323 +1,357 @@
+<!-- src/views/AuthTelegram.vue -->
 <template>
   <section
     class="relative flex min-h-screen items-center justify-center bg-background-light px-4 py-12 text-gray-900 transition-colors dark:bg-background-dark dark:text-white sm:px-6 lg:px-8"
   >
-    <div class="absolute inset-x-0 top-6 flex justify-center">
-      <div class="h-52 w-52 rounded-full bg-primary-soft/30 blur-3xl dark:bg-primary-soft/20"></div>
+    <!-- Фон (мягкий, без артефактов) -->
+    <div aria-hidden="true" class="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+      <div
+        class="absolute -top-40 left-1/2 h-[36rem] w-[36rem] -translate-x-1/2 rounded-full blur-3xl opacity-25 dark:opacity-20"
+        style="background: radial-gradient(50% 50% at 50% 50%, rgba(56,189,248,0.35) 0%, rgba(99,102,241,0.22) 45%, rgba(0,0,0,0) 70%);"
+      />
+      <div class="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background-light/60 to-transparent dark:from-background-dark/60" />
     </div>
 
-    <div
-      class="relative z-10 w-full max-w-xl rounded-2xl bg-surface-light/80 p-8 shadow-soft ring-1 ring-black/5 backdrop-blur transition-all duration-300 ease-out hover:scale-[1.02] dark:bg-surface-dark/80 dark:ring-white/10 sm:p-10"
-    >
-      <header class="flex flex-col items-center gap-3 text-center">
-        <span
-          class="inline-flex items-center rounded-full bg-primary-soft/20 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-primary-soft dark:bg-primary-soft/10"
+    <div class="w-full max-w-md">
+      <div class="rounded-2xl border border-black/10 bg-white/70 p-6 backdrop-blur-md shadow-xl dark:border-white/10 dark:bg-black/30">
+        <header class="mb-6 text-center">
+          <h1 class="text-2xl font-bold tracking-tight">Вход / Регистрация</h1>
+          <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">
+            Авторизация через Telegram. Сначала подтвердим номер, затем введёшь код.
+          </p>
+        </header>
+
+        <!-- Шаг 0: номер телефона -->
+        <form class="space-y-3" @submit.prevent="handleStart">
+          <label class="block text-sm font-medium" for="phone">Номер телефона</label>
+          <div class="relative">
+            <input
+              id="phone"
+              v-model.trim="phone"
+              inputmode="tel"
+              autocomplete="tel"
+              placeholder="+7 999 123-45-67"
+              class="w-full rounded-xl border border-black/10 bg-white/80 px-4 py-3 outline-none transition
+                     focus:ring-2 focus:ring-sky-400 dark:border-white/10 dark:bg-white/5"
+              :disabled="loadingStart || !!startCode"
+              @blur="normalizePhoneInline"
+            />
+            <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+              <span class="text-xs text-gray-500 dark:text-gray-400">E.164</span>
+            </div>
+          </div>
+          <p v-if="phoneError" class="text-sm text-rose-600 dark:text-rose-300">{{ phoneError }}</p>
+
+          <button
+            type="submit"
+            class="w-full rounded-xl px-4 py-3 text-base font-semibold transition active:scale-[0.99]
+                   bg-[#229ED9] text-white hover:brightness-110 disabled:opacity-60 disabled:cursor-not-allowed"
+            :disabled="!phoneValid || loadingStart || !!startCode"
+          >
+            {{ startCode ? 'Код уже получен' : (loadingStart ? 'Отправляем…' : 'Получить код в Telegram') }}
+          </button>
+        </form>
+
+        <!-- Блок со start-кодом и диплинком -->
+        <div
+          v-if="startCode"
+          class="mt-4 rounded-xl border border-sky-300/40 bg-sky-50/60 p-4 dark:border-sky-400/20 dark:bg-sky-400/10"
         >
-          Codex Chat
-        </span>
-        <div class="space-y-1">
-          <h1 class="text-3xl font-semibold sm:text-4xl">{{ TEXT.welcomeHeadline }}</h1>
-          <p class="text-sm text-subtext-light dark:text-subtext-dark sm:text-base">
-            {{ TEXT.welcomeDescription }}
+          <div class="flex items-center justify-between gap-2">
+            <div>
+              <p class="text-xs uppercase tracking-wide text-sky-700 dark:text-sky-300">Start code</p>
+              <p class="font-mono text-lg font-semibold">{{ startCode }}</p>
+            </div>
+            <button
+              class="rounded-lg border border-black/10 px-3 py-2 text-sm transition hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+              @click="copy(startCode)"
+              :disabled="copied"
+            >
+              {{ copied ? 'Скопировано' : 'Копировать' }}
+            </button>
+          </div>
+
+          <div class="mt-3 flex flex-col gap-2 sm:flex-row">
+            <a
+              :href="tgDeepLink"
+              target="_blank"
+              rel="noopener"
+              class="flex-1 rounded-lg border border-black/10 px-3 py-2 text-center text-sm font-medium transition hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+            >
+              Открыть Telegram
+            </a>
+            <button
+              type="button"
+              class="flex-1 rounded-lg border border-black/10 px-3 py-2 text-sm font-medium transition hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+              @click="resetStart"
+            >
+              Сменить код
+            </button>
+          </div>
+
+          <p class="mt-2 text-xs text-gray-600 dark:text-gray-300">
+            Срок жизни кода: <span class="font-medium">{{ ttlLabel }}</span>
           </p>
         </div>
-      </header>
 
-      <nav class="mt-8 flex justify-center" role="tablist" aria-label="Toggle between login and registration">
-        <div class="inline-flex rounded-full bg-black/5 p-1 dark:bg-white/10">
-          <button
-            v-for="tab in tabs"
-            :key="tab.value"
-            type="button"
-            :id="`tab-${tab.value}`"
-            :aria-controls="`panel-${tab.value}`"
-            :aria-selected="activeTab === tab.value"
-            :class="[
-              'relative min-w-[120px] rounded-full px-5 py-2 text-sm font-semibold transition-all',
-              activeTab === tab.value
-                ? 'bg-surface-light text-gray-900 shadow-md dark:bg-surface-dark dark:text-white'
-                : 'text-subtext-light hover:text-gray-900 dark:text-subtext-dark dark:hover:text-white',
-            ]"
-            role="tab"
-            @click="switchTab(tab.value)"
-          >
-            {{ tab.label }}
-          </button>
-        </div>
-      </nav>
-
-      <div class="mt-10 space-y-8">
-        <div
-          v-if="errorMessage"
-          class="rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-600 dark:text-red-400"
-          role="alert"
-        >
-          {{ errorMessage }}
-        </div>
-
-        <form
-          v-if="isLoginTab"
-          key="login"
-          class="space-y-5"
-          role="tabpanel"
-          aria-labelledby="tab-login"
-          id="panel-login"
-          @submit.prevent="handleLogin"
-        >
-          <div class="space-y-2">
-            <label class="block text-sm font-medium text-gray-900 dark:text-gray-100">
-              {{ TEXT.labels.identifier }}
-            </label>
+        <!-- Шаг 2: ввод проверочного кода -->
+        <form class="mt-6 space-y-3" @submit.prevent="handleVerify">
+          <label class="block text-sm font-medium" for="otp">Код из Telegram</label>
+          <div class="relative">
             <input
-              v-model.trim="loginForm.identifier"
-              type="text"
-              name="identifier"
-              autocomplete="username"
-              placeholder="+7 (999) 000-00-00"
-              class="w-full rounded-xl border border-black/5 bg-white/80 px-4 py-3 text-sm text-gray-900 shadow-sm transition focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary dark:border-white/10 dark:bg-surface-dark/70 dark:text-white"
+              id="otp"
+              v-model.trim="verifyCode"
+              inputmode="numeric"
+              autocomplete="one-time-code"
+              placeholder="Введите 6–8 значный код"
+              class="w-full rounded-xl border border-black/10 bg-white/80 px-4 py-3 outline-none transition
+                     focus:ring-2 focus:ring-sky-400 dark:border-white/10 dark:bg-white/5"
+              :disabled="!startCode || loadingVerify"
+              maxlength="12"
             />
-          </div>
-          <div class="space-y-2">
-            <label class="block text-sm font-medium text-gray-900 dark:text-gray-100">
-              {{ TEXT.labels.secret }}
-            </label>
-            <input
-              v-model.trim="loginForm.secret"
-              type="password"
-              name="secret"
-              autocomplete="current-password"
-              placeholder="Enter the SMS code or password"
-              class="w-full rounded-xl border border-black/5 bg-white/80 px-4 py-3 text-sm text-gray-900 shadow-sm transition focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary dark:border-white/10 dark:bg-surface-dark/70 dark:text-white"
-            />
+            <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+              <span class="text-xs text-gray-500 dark:text-gray-400">OTP</span>
+            </div>
           </div>
 
           <button
             type="submit"
-            class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-base font-semibold text-white transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary hover:bg-[#059669] disabled:cursor-not-allowed disabled:opacity-70"
-            :disabled="isLoading"
+            class="w-full rounded-xl bg-gray-900 px-4 py-3 font-semibold text-white transition
+                   hover:bg-gray-800 active:scale-[0.99] disabled:opacity-60 dark:bg-white dark:text-black dark:hover:bg-white/90"
+            :disabled="!canSubmit || loadingVerify"
           >
-            {{ isLoading ? TEXT.buttons.loginLoading : TEXT.buttons.loginIdle }}
+            {{ loadingVerify ? 'Проверяем…' : 'Войти' }}
           </button>
+
+          <p
+            v-if="errorMsg"
+            class="rounded-lg border border-rose-400/30 bg-rose-100/60 p-3 text-sm text-rose-800 dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-200"
+          >
+            {{ errorMsg }}
+          </p>
         </form>
 
-        <form
-          v-else
-          key="register"
-          class="space-y-5"
-          role="tabpanel"
-          aria-labelledby="tab-register"
-          id="panel-register"
-          @submit.prevent="handleRegister"
+        <footer class="mt-6 text-center text-xs text-gray-500 dark:text-gray-400">
+          Нажимая «Войти», вы соглашаетесь с условиями сервиса и политикой конфиденциальности.
+        </footer>
+      </div>
+
+      <div class="mt-4 text-center">
+        <router-link
+          to="/"
+          class="text-sm text-gray-600 underline-offset-4 hover:underline dark:text-gray-300"
         >
-          <div class="space-y-2">
-            <label class="block text-sm font-medium text-gray-900 dark:text-gray-100">
-              {{ TEXT.labels.name }}
-            </label>
-            <input
-              v-model.trim="registerForm.name"
-              type="text"
-              name="name"
-              autocomplete="name"
-              placeholder="Enter full name"
-              class="w-full rounded-xl border border-black/5 bg-white/80 px-4 py-3 text-sm text-gray-900 shadow-sm transition focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary dark:border-white/10 dark:bg-surface-dark/70 dark:text-white"
-            />
-          </div>
-          <div class="space-y-2">
-            <label class="block text-sm font-medium text-gray-900 dark:text-gray-100">
-              {{ TEXT.labels.contact }}
-            </label>
-            <input
-              v-model.trim="registerForm.contact"
-              type="text"
-              name="contact"
-              autocomplete="email"
-              placeholder="+7 (999) 000-00-00"
-              class="w-full rounded-xl border border-black/5 bg-white/80 px-4 py-3 text-sm text-gray-900 shadow-sm transition focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary dark:border-white/10 dark:bg-surface-dark/70 dark:text-white"
-            />
-          </div>
-          <div class="space-y-2">
-            <label class="block text-sm font-medium text-gray-900 dark:text-gray-100">
-              {{ TEXT.labels.password }}
-            </label>
-            <input
-              v-model.trim="registerForm.password"
-              type="password"
-              name="password"
-              autocomplete="new-password"
-              placeholder="Create a secure password"
-              class="w-full rounded-xl border border-black/5 bg-white/80 px-4 py-3 text-sm text-gray-900 shadow-sm transition focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary dark:border-white/10 dark:bg-surface-dark/70 dark:text-white"
-            />
-          </div>
-
-          <button
-            type="submit"
-            class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-base font-semibold text-white transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary hover:bg-[#059669] disabled:cursor-not-allowed disabled:opacity-70"
-            :disabled="isLoading"
-          >
-            {{ isLoading ? TEXT.buttons.registerLoading : TEXT.buttons.registerIdle }}
-          </button>
-        </form>
-
-        <div class="space-y-6">
-          <div class="flex items-center gap-3 text-xs font-medium uppercase tracking-[0.3em] text-subtext-light dark:text-subtext-dark">
-            <span class="h-px flex-1 bg-black/10 dark:bg-white/10" aria-hidden="true"></span>
-            Or
-            <span class="h-px flex-1 bg-black/10 dark:bg-white/10" aria-hidden="true"></span>
-          </div>
-
-          <button
-            type="button"
-            class="inline-flex w-full items-center justify-center gap-3 rounded-xl border border-black/10 bg-white/60 px-5 py-3 text-base font-semibold text-gray-900 transition-all hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-80 dark:border-white/10 dark:bg-surface-dark/70 dark:text-white"
-            @click="handleTelegramAuth"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              class="h-6 w-6"
-              fill="currentColor"
-              aria-hidden="true"
-            >
-              <path
-                d="M22.999 3.001a1.5 1.5 0 0 0-2.072-1.384L2.225 9.398a1.317 1.317 0 0 0 .072 2.48l3.963 1.227 2.27 7.527a1.31 1.31 0 0 0 2.134.598l3.205-2.86 4.35 3.403a1.31 1.31 0 0 0 2.084-.74L22.94 3.315q.06-.157.059-.314ZM18.43 7.21l-8.59 7.53a.55.55 0 0 0-.18.31l-.42 2.641a.33.33 0 0 1-.642.044L7.58 14.31a.55.55 0 0 1 .214-.62l9.32-6.13a.24.24 0 0 1 .316.036.24.24 0 0 1-.002.356Z"
-              />
-            </svg>
-            {{ TEXT.buttons.telegram }}
-          </button>
-        </div>
+          На главную
+        </router-link>
       </div>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
-
 import { useUserStore } from '@/stores/userStore'
 
-type AuthTab = 'login' | 'register'
-
-const TEXT = {
-  welcomeHeadline: 'Welcome back',
-  welcomeDescription: 'Sign in to continue collaborating with your team in Codex Chat.',
-  tabs: {
-    login: '\u0412\u0445\u043E\u0434',
-    register: '\u0420\u0435\u0433\u0438\u0441\u0442\u0440\u0430\u0446\u0438\u044F',
-  },
-  labels: {
-    identifier: '\u0422\u0435\u043B\u0435\u0444\u043E\u043D \u0438\u043B\u0438 email',
-    secret: '\u041A\u043E\u0434 \u0438\u043B\u0438 \u043F\u0430\u0440\u043E\u043B\u044C',
-    name: '\u0418\u043C\u044F',
-    contact: '\u0422\u0435\u043B\u0435\u0444\u043E\u043D \u0438\u043B\u0438 email',
-    password: '\u041F\u0430\u0440\u043E\u043B\u044C',
-  },
-  buttons: {
-    loginIdle: '\u0412\u043E\u0439\u0442\u0438',
-    loginLoading: '\u0412\u0445\u043E\u0434\u0438\u043C\u2026',
-    registerIdle: '\u0421\u043E\u0437\u0434\u0430\u0442\u044C \u0430\u043A\u043A\u0430\u0443\u043D\u0442',
-    registerLoading: '\u0421\u043E\u0437\u0434\u0430\u0451\u043C\u2026',
-    telegram: '\u041F\u0440\u043E\u0434\u043E\u043B\u0436\u0438\u0442\u044C \u0447\u0435\u0440\u0435\u0437 Telegram',
-  },
-} as const
-
-const tabs: Array<{ label: string; value: AuthTab }> = [
-  { label: TEXT.tabs.login, value: 'login' },
-  { label: TEXT.tabs.register, value: 'register' },
-]
+// ENV
+// VITE_API_BASE_URL=https://api.example.com
+// VITE_TELEGRAM_BOT=your_bot_username  (без @)
+const API = import.meta.env.VITE_API_BASE_URL || ''
+const TG_BOT = (import.meta.env.VITE_TELEGRAM_BOT || '').replace(/^@/, '')
 
 const router = useRouter()
 const userStore = useUserStore()
 
-const activeTab = ref<AuthTab>('login')
-const isLoading = ref(false)
-const errorMessage = ref('')
+// UI/State
+const loadingStart = ref(false)
+const loadingVerify = ref(false)
+const startCode = ref<string | null>(null)
+const startExpiresAt = ref<number | null>(null) // unix ms
+const verifyCode = ref('')
+const errorMsg = ref('')
+const copied = ref(false)
 
-const loginForm = reactive({
-  identifier: '',
-  secret: '',
+// Телефон
+const phone = ref('')
+const phoneError = ref('')
+
+// Таймер
+let timer: number | null = null
+
+// ======== Computed ========
+const phoneValid = computed(() => {
+  const normalized = normalizePhone(phone.value)
+  // Примитивная проверка E.164: + и от 8 до 15 цифр
+  return /^\+\d{8,15}$/.test(normalized)
 })
 
-const registerForm = reactive({
-  name: '',
-  contact: '',
-  password: '',
+const ttlMs = computed(() => {
+  if (!startExpiresAt.value) return 0
+  return Math.max(0, startExpiresAt.value - Date.now())
 })
 
-const isLoginTab = computed(() => activeTab.value === 'login')
+const ttlLabel = computed(() => {
+  const ms = ttlMs.value
+  const s = Math.ceil(ms / 1000)
+  const m = Math.floor(s / 60)
+  const ss = s % 60
+  if (!ms) return 'истёк'
+  return `${m}:${ss.toString().padStart(2, '0')}`
+})
 
-const fakeRequest = () =>
-  new Promise<void>((resolve) => {
-    setTimeout(resolve, 900)
-  })
+const tgDeepLink = computed(() => {
+  const code = startCode.value || ''
+  if (!TG_BOT) return '#'
+  const startParam = code ? `?start=${encodeURIComponent(code)}` : ''
+  return `https://t.me/${TG_BOT}${startParam}`
+})
 
-const switchTab = (nextTab: AuthTab) => {
-  if (nextTab === activeTab.value) return
-  if (isLoading.value) return
+const canSubmit = computed(() => {
+  return !!startCode.value && verifyCode.value.length >= 4 && !loadingVerify.value
+})
 
-  activeTab.value = nextTab
-  errorMessage.value = ''
-}
+// ======== Methods ========
+async function handleStart() {
+  errorMsg.value = ''
+  phoneError.value = ''
+  copied.value = false
 
-const handleLogin = async () => {
-  if (!loginForm.identifier || !loginForm.secret) {
-    errorMessage.value = 'Please fill in both fields.'
+  const normalized = normalizePhone(phone.value)
+  if (!/^\+\d{8,15}$/.test(normalized)) {
+    phoneError.value = 'Введите корректный номер в формате +XXXXXXXXXXX'
     return
   }
 
-  isLoading.value = true
-  errorMessage.value = ''
-
+  loadingStart.value = true
   try {
-    await fakeRequest()
-    console.log('login payload', { ...loginForm })
-    await userStore.fetchProfile()
-    router.push('/chats')
-  } catch (error) {
-    console.error('login error', error)
-    errorMessage.value = 'Unable to sign in. Please try again.'
+    // бек ожидает номер для связки
+    const res = await fetch(`${API}/api/auth/telegram/start`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: normalized }),
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const data = await res.json()
+
+    startCode.value = data.start_code || data.startCode
+    if (!startCode.value) throw new Error('Не получили start_code')
+
+    const expiresIso = data.expires_at || data.expiresAt
+    const ttl = typeof data.ttl === 'number' ? data.ttl : null
+
+    if (expiresIso) {
+      startExpiresAt.value = typeof expiresIso === 'number' ? expiresIso : Date.parse(expiresIso)
+    } else if (ttl) {
+      startExpiresAt.value = Date.now() + ttl * 1000
+    } else {
+      startExpiresAt.value = Date.now() + 5 * 60 * 1000
+    }
+
+    if (timer) window.clearInterval(timer)
+    timer = window.setInterval(() => {
+      if (ttlMs.value <= 0 && timer) {
+        window.clearInterval(timer)
+        timer = null
+      }
+    }, 1000)
+  } catch (e: any) {
+    errorMsg.value = normalizeErr(e, 'Не удалось отправить код. Попробуйте позже.')
+    startCode.value = null
+    startExpiresAt.value = null
   } finally {
-    isLoading.value = false
+    loadingStart.value = false
   }
 }
 
-const handleRegister = async () => {
-  if (!registerForm.name || !registerForm.contact || !registerForm.password) {
-    errorMessage.value = 'Please complete all fields before continuing.'
-    return
-  }
-
-  isLoading.value = true
-  errorMessage.value = ''
-
+async function handleVerify() {
+  if (!canSubmit.value) return
+  errorMsg.value = ''
+  loadingVerify.value = true
   try {
-    await fakeRequest()
-    console.log('register payload', { ...registerForm })
+    const payload = {
+      start_code: startCode.value,
+      code: verifyCode.value.trim(),
+    }
+    const res = await fetch(`${API}/api/auth/telegram/verify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const data = await res.json()
+
+    const access = data.access || data.token?.access
+    const refresh = data.refresh || data.token?.refresh
+    if (!access || !refresh) throw new Error('Пустой ответ авторизации')
+
+    localStorage.setItem('access', access)
+    localStorage.setItem('refresh', refresh)
+
     await userStore.fetchProfile()
-    router.push('/chats')
-  } catch (error) {
-    console.error('register error', error)
-    errorMessage.value = 'Account creation failed. Please try again.'
+    router.replace('/chats')
+  } catch (e: any) {
+    errorMsg.value = normalizeErr(e, 'Неверный код или истёк срок действия. Запросите новый.')
   } finally {
-    isLoading.value = false
+    loadingVerify.value = false
   }
 }
 
-const handleTelegramAuth = async () => {
-  if (isLoading.value) return
-
-  isLoading.value = true
-  errorMessage.value = ''
-
-  try {
-    await fakeRequest()
-    console.log('telegram auth requested')
-    await userStore.fetchProfile()
-    router.push('/chats')
-  } catch (error) {
-    console.error('telegram auth error', error)
-    errorMessage.value = 'Telegram sign-in failed. Please try a different method.'
-  } finally {
-    isLoading.value = false
+function resetStart() {
+  startCode.value = null
+  startExpiresAt.value = null
+  verifyCode.value = ''
+  errorMsg.value = ''
+  copied.value = false
+  if (timer) {
+    window.clearInterval(timer)
+    timer = null
   }
 }
+
+async function copy(text: string) {
+  try {
+    await navigator.clipboard.writeText(text)
+    copied.value = true
+    setTimeout(() => (copied.value = false), 1200)
+  } catch { /* no-op */ }
+}
+
+function normalizeErr(e: any, fallback: string) {
+  return String(e?.response?.data?.detail || e?.response?.data?.message || e?.message || fallback)
+}
+
+// Нормализация телефона в E.164 с простыми правилами СНГ
+function normalizePhone(raw: string): string {
+  let digits = String(raw).replace(/[^\d+]/g, '')
+  // если начинается с 8 и длина >= 10 — преобразуем в +7…
+  if (/^8\d{10}$/.test(digits)) digits = '+7' + digits.slice(1)
+  // если начинается с 7 без плюса — добавим плюс
+  if (/^7\d{10,14}$/.test(digits)) digits = '+' + digits
+  // если нет плюса и начинается с 0 — уберём ведущие нули
+  if (/^0+\d+$/.test(digits)) digits = digits.replace(/^0+/, '')
+  // если начинается с ++ — исправим
+  digits = digits.replace(/^\++/, '+')
+  // если без плюса, но похоже на международный — добавим
+  if (!digits.startsWith('+') && /^\d{8,15}$/.test(digits)) digits = '+' + digits
+  return digits
+}
+
+function normalizePhoneInline() {
+  const n = normalizePhone(phone.value)
+  phone.value = n
+  phoneError.value = /^\+\d{8,15}$/.test(n) ? '' : 'Формат: +XXXXXXXXXXX'
+}
+
+// ======== Lifecycle ========
+onMounted(() => {
+  if (localStorage.getItem('access')) router.replace('/chats')
+})
+onBeforeUnmount(() => {
+  if (timer) window.clearInterval(timer)
+})
 </script>
+
+<style scoped>
+/* Устраняем масштабирование на iOS при фокусе */
+input { font-size: 16px; }
+</style>
