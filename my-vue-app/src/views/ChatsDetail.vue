@@ -282,7 +282,7 @@ const mainPaddingStyle = computed(() => ({
       @paste="onPaste"
     >
       <div
-        class="mx-auto flex w-full max-w-3xl flex-1 flex-col overflow-hidden rounded-2xl bord bg-[#F1F5F9] p-4 shadow-sm transition-shadow dark:border-white/10 dark:bg-slate-900 min-h-0"
+        class="mx-auto flex w-full max-w-3xl flex-1 flex-col overflow-hidden rounded-2xl bord bg-white p-4 shadow-sm transition-shadow dark:border-white/10 dark:bg-slate-900 min-h-0"
         :class="isDragOver ? 'ring-2 ring-primary/40 shadow-md dark:ring-primary/30' : ''"
       >
         <!-- Растяжной враппер: тянет контент на всю высоту и прижимает тред к низу -->
@@ -353,7 +353,7 @@ const mainPaddingStyle = computed(() => ({
                 v-model="draft"
                 rows="1"
                 placeholder="Сообщение…"
-                class="grow-height-smooth block w-full resize-none rounded-xl border border-transparent bg-white/80 px-3 py-2 pr-12 text-[16px] leading-6 shadow-sm
+                class="grow-height-smooth block w-full resize-none rounded-xl border border-transparent bg-white px-3 py-2 pr-12 text-[16px] leading-6 shadow-sm
                        focus:border-primary/30 focus:outline-none focus:ring-2 focus:ring-primary/20
                        dark:bg-white/5 dark:text-white"
                 @input="autoGrow"
