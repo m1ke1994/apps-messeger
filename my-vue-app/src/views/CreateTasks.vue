@@ -98,6 +98,31 @@
 
             <p v-if="errors.deadline" class="mt-1 text-xs text-rose-600">{{ errors.deadline }}</p>
           </div>
+
+          <div class="rounded-2xl border border-black/10 bg-white/70 p-4 dark:border-white/10 dark:bg-white/5">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <p class="text-sm font-medium text-gray-800 dark:text-gray-200">Срочно?</p>
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Отметьте, если задачу нужно выполнить в первую очередь.
+                </p>
+              </div>
+              <label class="relative inline-flex cursor-pointer items-center">
+                <input
+                  v-model="form.urgent"
+                  type="checkbox"
+                  class="peer sr-only"
+                  aria-label="Пометить задачу как срочную"
+                />
+                <span
+                  class="peer h-6 w-11 rounded-full bg-gray-300 transition peer-checked:bg-[#047857] dark:bg-gray-600"
+                ></span>
+                <span
+                  class="pointer-events-none absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white transition peer-checked:translate-x-5"
+                ></span>
+              </label>
+            </div>
+          </div>
         </section>
 
         <!-- Шаг 3 (превью) -->
@@ -124,11 +149,25 @@
               <div class="my-4 h-px w-full bg-gradient-to-r from-transparent via-black/10 to-transparent dark:via-white/10"></div>
 
               <div class="flex flex-wrap items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
-                <span class="rounded-full bg-primary/10 px-2.5 py-1 text-primary border border-black/10 dark:border-white/10">
+                <span
+                  class="rounded-full border border-black/10 bg-primary/10 px-2.5 py-1 font-semibold text-primary dark:border-white/10"
+                >
                   {{ form.category || 'Категория' }}
                 </span>
                 <span v-if="form.deadlineDays" class="rounded-full bg-slate-100 px-2.5 py-1 dark:bg-white/10">
                   Срок: {{ form.deadlineDays }} {{ dayWord(form.deadlineDays) }}
+                </span>
+                <span
+                  v-if="previewUrgency === 'urgent'"
+                  class="rounded-full bg-rose-100 px-2.5 py-1 font-semibold text-rose-700 dark:bg-rose-400/15 dark:text-rose-300"
+                >
+                  Срочно
+                </span>
+                <span
+                  v-else-if="previewUrgency === 'soon'"
+                  class="rounded-full bg-amber-100 px-2.5 py-1 font-semibold text-amber-800 dark:bg-amber-400/15 dark:text-amber-300"
+                >
+                  Скоро
                 </span>
               </div>
             </div>
@@ -195,10 +234,12 @@
 <script setup>
 import { computed, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useTasksStore } from '@/stores/tasksStore'
+import { useUserStore } from '@/stores/userStore'
 
 /* ---- Константы ---- */
 const totalSteps = 3
-const categories = ['Разработка', 'Дизайн', 'Копирайтинг']
+const categories = ['Разработка', 'Дизайн', 'Копирайтинг', 'Офлайн']
 
 /* ---- Состояние формы ---- */
 const step = ref(1)
@@ -209,6 +250,7 @@ const form = reactive({
   description: '',
   price: null,        // число или null
   deadlineDays: 7,    // 1..100
+  urgent: false,
 })
 
 const errors = reactive({
@@ -261,6 +303,9 @@ function prev() {
 /* ---- Закрытие ---- */
 const router = useRouter()
 const emit = defineEmits(['close'])
+const tasksStore = useTasksStore()
+const userStore = useUserStore()
+const DEMO_AUTHOR_ID = 500
 function handleClose() {
   if (window.history.length > 1) {
     router.back()
@@ -271,17 +316,73 @@ function handleClose() {
 
 /* ---- Публикация (заглушка под POST) ---- */
 async function publish() {
+  if (publishing.value) return
   publishing.value = true
   try {
-    await new Promise((r) => setTimeout(r, 1200))
-    console.log('POST /api/tasks', { ...form })
-    alert('Задача успешно опубликована!')
-  } catch (e) {
-    alert('Не удалось опубликовать. Попробуйте ещё раз.')
+    const created = tasksStore.createTask({
+      category: form.category,
+      title: form.title,
+      description: form.description,
+      price: form.price == null ? null : Number(form.price),
+      deadlineDays: form.deadlineDays,
+      offline: false,
+      tags: [],
+      status: 'pending',
+      author: resolveAuthor(),
+      isUrgent: form.urgent,
+    })
+
+    await new Promise((resolve) => setTimeout(resolve, 400))
+
+    resetForm()
+    step.value = 1
+    await router.replace({ name: 'tasks' })
+    return created
+  } catch (error) {
+    console.error(error)
+    alert('Не удалось опубликовать. Попробуйте позже.')
+    return null
   } finally {
     publishing.value = false
   }
 }
+
+function resetForm() {
+  form.category = ''
+  form.title = ''
+  form.description = ''
+  form.price = null
+  form.deadlineDays = 7
+  form.urgent = false
+}
+
+function resolveAuthor() {
+  const profile = userStore.profile
+  if (!profile) return undefined
+
+  const trimmedName = (profile.name ?? '').trim()
+  const parts = trimmedName ? trimmedName.split(/\s+/) : []
+  const firstName = parts[0] ?? 'Demo'
+  const lastName = parts.slice(1).join(' ') || 'User'
+  const uniqueKey = profile.id ?? (trimmedName || 'demo')
+
+  return {
+    id: DEMO_AUTHOR_ID,
+    firstName,
+    lastName,
+    avatar: `https://i.pravatar.cc/120?u=${encodeURIComponent(uniqueKey)}`,
+    online: true,
+  }
+}
+
+const previewUrgency = computed<'urgent' | 'soon' | null>(() => {
+  if (form.urgent) return 'urgent'
+  const days = Number(form.deadlineDays)
+  if (!Number.isFinite(days)) return null
+  if (days <= 2) return 'urgent'
+  if (days <= 7) return 'soon'
+  return null
+})
 
 /* ---- Склонение слова «день» ---- */
 function dayWord(n) {
@@ -346,3 +447,5 @@ body { min-height: max(var(--mobile-h), 100dvh); }
 }
 .btn-icon:active { transform: translateY(1px); }
 </style>
+
+

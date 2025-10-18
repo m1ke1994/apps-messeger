@@ -64,8 +64,15 @@
               </span>
             </div>
 
-            <!-- Срок -->
+            <!-- Категория, срок и срочность -->
             <div class="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-600 dark:text-slate-300">
+              <span
+                v-if="t.category"
+                class="rounded-full border border-black/10 bg-primary/10 px-2.5 py-1 font-semibold text-primary dark:border-white/10"
+              >
+                {{ t.category }}
+              </span>
+
               <!-- Вариант 1: срок в днях -->
               <span v-if="t.deadlineDays" class="rounded-full bg-slate-100 px-2.5 py-1 dark:bg-white/10">
                 Срок: {{ t.deadlineDays }} {{ dayWord(t.deadlineDays) }}
@@ -202,12 +209,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+import { computed, reactive, ref, watchEffect } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTasksStore } from '@/stores/tasksStore'
+import { storeToRefs } from 'pinia'
 
 const router = useRouter()
 const store = useTasksStore()
+const { tasks } = storeToRefs(store)
 
 /* сроки */
 // склонение "день/дня/дней"
@@ -236,6 +245,7 @@ function daysBetweenNow(iso?: string): number | null {
 }
 
 function deadlineBadge(t: any): 'urgent' | 'soon' | null {
+  if (t?.isUrgent) return 'urgent'
   const days = typeof t.deadlineDays === 'number' ? t.deadlineDays : daysBetweenNow(t.deadlineAt)
   if (days == null) return null
   if (days <= 2) return 'urgent'
@@ -264,10 +274,17 @@ const statusChip = {
 }
 
 /* данные */
-const categoriesList = ['Маркетинг', 'IT', 'Дизайн', 'Офлайн']
+const baseCategories = ['Маркетинг', 'IT', 'Дизайн', 'Офлайн']
+const categoriesList = ref([...baseCategories])
 const allCategoryName = 'Все задания'
 
-const tasks = store.tasks
+watchEffect(() => {
+  for (const task of tasks.value) {
+    if (task?.category && !categoriesList.value.includes(task.category)) {
+      categoriesList.value.push(task.category)
+    }
+  }
+})
 
 /* фильтры */
 const searchQuery = ref('')
@@ -309,7 +326,7 @@ function applyFilters() {
 /* список */
 const filteredTasks = computed(() => {
   const q = searchQuery.value.toLowerCase().trim()
-  return tasks.filter((t) => {
+  return tasks.value.filter((t) => {
     const byCategory = selectedCategory.value === allCategoryName || t.category === selectedCategory.value
     const byStatus = selectedStatus.value === 'all' || t.status === selectedStatus.value
     const inText = !q
