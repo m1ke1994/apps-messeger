@@ -15,8 +15,30 @@ export const useUserStore = defineStore('user', {
     status: 'idle' as StoreStatus,
   }),
   actions: {
+    setLoading() {
+      this.status = 'loading'
+    },
+    clearProfile() {
+      this.profile = null
+      this.status = 'idle'
+    },
     setProfile(profile: UserProfile) {
       this.profile = profile
+      this.status = 'ready'
+    },
+    async bootstrapDemoProfile(partial?: Partial<UserProfile>) {
+      this.status = 'loading'
+      this.profile = {
+        id: partial?.id ?? 'demo',
+        name: partial?.name ?? 'Demo User',
+        phone: partial?.phone,
+        email: partial?.email,
+      }
+
+      await new Promise<void>((resolve) => {
+        setTimeout(resolve, 500)
+      })
+
       this.status = 'ready'
     },
     async fetchProfile() {

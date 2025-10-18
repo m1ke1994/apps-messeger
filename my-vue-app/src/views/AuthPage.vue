@@ -263,15 +263,14 @@ async function handleVerify() {
     localStorage.setItem('access', 'demo-access-token')
     localStorage.setItem('refresh', 'demo-refresh-token')
 
-    // Mark demo profile so navigation treats user as authenticated
     const normalized = normalizePhone(phone.value)
-    userStore.setProfile({
+    const bootstrapPromise = userStore.bootstrapDemoProfile({
       id: 'demo',
       name: 'Demo User',
       phone: normalized,
     })
 
-    router.replace({ name: 'chats' })
+    await Promise.all([bootstrapPromise, router.replace({ name: 'chats' })])
   } catch (e: any) {
     errorMsg.value = String(e?.message || 'Проверка не пройдена')
   } finally {

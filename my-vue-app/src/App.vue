@@ -123,6 +123,20 @@
         </RouterLink>
       </nav>
     </footer>
+
+    <Transition name="fade">
+      <div
+        v-if="isAppLoading"
+        class="fixed inset-0 z-40 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+        aria-live="assertive"
+        aria-label="Загрузка данных"
+      >
+        <div class="flex flex-col items-center gap-3 text-white">
+          <span class="h-12 w-12 animate-spin rounded-full border-4 border-white/30 border-t-white"></span>
+          <p class="text-sm font-medium">Загружаем профиль…</p>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
 
@@ -132,6 +146,7 @@ import { computed, defineComponent, h, onMounted } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { peersMap, type PeerInfo } from './data/peers'
 import { useNavigationDirectionStore } from './stores/navigationDirection'
+import { useUserStore } from './stores/userStore'
 
 type NavName = 'chats' | 'tasks' | 'responses' | 'create-task' | 'profile' | 'settings'
 type NavItem = { name: NavName; label: string; icon: string }
@@ -160,7 +175,9 @@ const TITLE_MAP: Record<string, string> = {
 const route = useRoute()
 const router = useRouter()
 const navigationStore = useNavigationDirectionStore()
+const userStore = useUserStore()
 const { direction } = storeToRefs(navigationStore)
+const { status } = storeToRefs(userStore)
 const transitionName = computed(() => (direction.value === 'back' ? 'slide-back' : 'slide-forward'))
 
 const rName = computed(() => String((route as any)?.name ?? ''))
@@ -219,6 +236,8 @@ const bubbleClass = (name: NavName) =>
     ? 'bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-200'
     : 'text-black/70 hover:bg-black/5 dark:text-white/70 dark:hover:bg-white/10'
 
+const isAppLoading = computed(() => status.value === 'loading')
+
 onMounted(() => {
   router.afterEach((to) => {
     const metaTitle = (to as any)?.meta?.title as string | undefined
@@ -255,10 +274,8 @@ const SvgIcon = defineComponent({
       'aria-hidden': 'true',
     } as const
 
-    const color = props.active ? ACTIVE_COLOR : 'currentColor'
-
-    const icons: Record<string, () => ReturnType<typeof h>> = {
-      settings: () =>
+    const icons: Record<string, (color: string) => ReturnType<typeof h>> = {
+      settings: (color) =>
         h('svg', { ...baseAttrs, viewBox: '0 0 50 50' }, [
           h('path', {
             d: 'M22.2 2a1 1 0 0 0-.98.84l-.97 5.95a18.6 18.6 0 0 0-3.34 1.37l-4.9-3.51a1 1 0 0 0-1.3.1l-3.89 3.89a1 1 0 0 0-.11 1.28l3.46 4.95a18.6 18.6 0 0 0-1.38 3.33l-5.93.99a1 1 0 0 0-.84.98v5.5a1 1 0 0 0 .82.98l5.93 1.05a18.5 18.5 0 0 0 1.39 3.35l-3.5 4.9a1 1 0 0 0 .1 1.3l3.89 3.89a1 1 0 0 0 1.28.11l4.95-3.46a18.6 18.6 0 0 0 3.33 1.38l.99 5.94a1 1 0 0 0 .98.84h5.5a1 1 0 0 0 .98-.83l1.06-5.99a18.7 18.7 0 0 0 3.33-1.4l4.99 3.5a1 1 0 0 0 1.3-.1l3.89-3.89a1 1 0 0 0 .11-1.28l-3.46-4.95a18.6 18.6 0 0 0 1.38-3.32l5.94-1.06a1 1 0 0 0 .84-.98v-5.5a1 1 0 0 0-.84-.97l-6-1.03a18.5 18.5 0 0 0-1.37-3.32l3.5-4.99a1 1 0 0 0-.1-1.3l-3.89-3.89a1 1 0 0 0-1.28-.11l-5.02 3.54A18.6 18.6 0 0 0 29.74 8l-1.05-6A1 1 0 0 0 27.7 2z',
@@ -268,7 +285,7 @@ const SvgIcon = defineComponent({
           }),
           h('circle', { cx: '25', cy: '25', r: '8', stroke: color, 'stroke-width': '3.5', fill: 'none' }),
         ]),
-      chats: () =>
+      chats: (color) =>
         h('svg', { ...baseAttrs, viewBox: '0 0 512 512' }, [
           h('path', {
             d: 'M256 32C132.3 32 32 120.9 32 232c0 49.6 23.4 95 62.6 130.1C85 401.2 72.3 437.3 72 438.3a8 8 0 0 0 7.5 10.6c30.7 0 74.4-21.8 97.4-35.2 24.3 8.2 50.8 12.3 79.1 12.3 123.7 0 224-88.9 224-200S379.7 32 256 32Z',
@@ -282,12 +299,12 @@ const SvgIcon = defineComponent({
           h('circle', { cx: '256', cy: '232', r: '16', fill: color }),
           h('circle', { cx: '336', cy: '232', r: '16', fill: color }),
         ]),
-      tasks: () =>
+      tasks: (color) =>
         h('svg', baseAttrs, [
           h('rect', { x: '4', y: '3.5', width: '16', height: '17', rx: '2.5', stroke: color, 'stroke-width': '1.8' }),
           h('path', { d: 'M8 8h8M8 12h8M8 16h5', stroke: color, 'stroke-width': '1.8', 'stroke-linecap': 'round' }),
         ]),
-      responses: () =>
+      responses: (color) =>
         h('svg', baseAttrs, [
           h('path', {
             d: 'M4 7.5A2.5 2.5 0 0 1 6.5 5h11A2.5 2.5 0 0 1 20 7.5V17a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7.5Z',
@@ -302,17 +319,17 @@ const SvgIcon = defineComponent({
             'stroke-linejoin': 'round',
           }),
         ]),
-      'create-task': () =>
+      'create-task': (color) =>
         h('svg', baseAttrs, [
           h('circle', { cx: '12', cy: '12', r: '8.5', stroke: color, 'stroke-width': '1.8' }),
           h('path', { d: 'M12 8v8M8 12h8', stroke: color, 'stroke-width': '1.8', 'stroke-linecap': 'round' }),
         ]),
-      profile: () =>
+      profile: (color) =>
         h('svg', baseAttrs, [
           h('circle', { cx: '12', cy: '8', r: '3.2', stroke: color, 'stroke-width': '1.8' }),
           h('path', { d: 'M5 19a7 7 0 0 1 14 0', stroke: color, 'stroke-width': '1.8', 'stroke-linecap': 'round' }),
         ]),
-      phone: () =>
+      phone: (color) =>
         h('svg', { ...baseAttrs, viewBox: '0 0 24 24' }, [
           h('path', {
             d: 'M4.5 5.5c-.3 3.9 3.6 8.4 7 10.8 1.6 1.1 3.7 1.1 5.2-.2l1-0.9a1 1 0 0 0-.1-1.6l-2.9-1.6a1 1 0 0 0-1.1.1l-.9.7c-1.5-0.8-3.4-2.7-4.2-4.2l.7-.9a1 1 0 0 0 .1-1.1L8.1 4c-.3-.6-1.1-.8-1.6-.4l-1 0.9c-.7.6-1.1 1.4-1 2z',
@@ -323,7 +340,7 @@ const SvgIcon = defineComponent({
             'stroke-linejoin': 'round',
           }),
         ]),
-      video: () =>
+      video: (color) =>
         h('svg', { ...baseAttrs, viewBox: '0 0 24 24' }, [
           h('path', {
             d: 'M3 6h11a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1z',
@@ -346,7 +363,11 @@ const SvgIcon = defineComponent({
 
     return () => {
       const renderIcon = icons[props.name]
-      return renderIcon ? renderIcon() : h('svg', baseAttrs)
+      if (!renderIcon) {
+        return h('svg', baseAttrs)
+      }
+      const color = props.active ? ACTIVE_COLOR : 'currentColor'
+      return renderIcon(color)
     }
   },
 })
