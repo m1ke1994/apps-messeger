@@ -31,8 +31,9 @@
               inputmode="tel"
               autocomplete="tel"
               placeholder="+7 999 123-45-67"
-              class="w-full rounded-xl border border-black/10 bg-white/80 px-4 py-3 outline-none transition
-                     focus:ring-2 focus:ring-sky-400 dark:border-white/10 dark:bg-white/5"
+              class="w-full rounded-xl border border-[#047857]/30 bg-white/80 px-4 py-3 outline-none transition
+                     focus:border-[#047857] focus:ring-2 focus:ring-[#047857] disabled:border-[#047857]/20
+                     dark:border-[#047857]/40 dark:bg-white/5 dark:focus:border-[#34d399] dark:focus:ring-[#34d399]"
               :disabled="loadingStart || !!startCode"
               @blur="normalizePhoneInline"
             />
@@ -45,7 +46,8 @@
           <button
             type="submit"
             class="w-full rounded-xl px-4 py-3 text-base font-semibold transition active:scale-[0.99]
-                   bg-[#229ED9] text-white hover:brightness-110 disabled:opacity-60 disabled:cursor-not-allowed"
+                   bg-[#047857] text-white hover:bg-[#059669] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#34d399]
+                   disabled:cursor-not-allowed disabled:bg-[#047857]/60 disabled:opacity-60"
             :disabled="!phoneValid || loadingStart || !!startCode"
           >
             {{ startCode ? 'Код уже получен' : (loadingStart ? 'Генерируем…' : 'Получить код (демо)') }}
@@ -55,15 +57,17 @@
         <!-- Блок со start-кодом и диплинком -->
         <div
           v-if="startCode"
-          class="mt-4 rounded-xl border border-sky-300/40 bg-sky-50/60 p-4 dark:border-sky-400/20 dark:bg-sky-400/10"
+          class="mt-4 rounded-xl border border-[#047857]/30 bg-[#047857]/5 p-4 dark:border-[#34d399]/30 dark:bg-[#047857]/10"
         >
           <div class="flex items-center justify-between gap-2">
             <div>
-              <p class="text-xs uppercase tracking-wide text-sky-700 dark:text-sky-300">Start code (демо)</p>
+              <p class="text-xs uppercase tracking-wide text-[#047857] dark:text-[#34d399]">Start code (демо)</p>
               <p class="font-mono text-lg font-semibold">{{ startCode }}</p>
             </div>
             <button
-              class="rounded-lg border border-black/10 px-3 py-2 text-sm transition hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+              class="rounded-lg border border-[#047857]/40 px-3 py-2 text-sm font-medium text-[#047857] transition
+                     hover:bg-[#047857]/10 disabled:cursor-not-allowed disabled:opacity-60
+                     dark:border-[#34d399]/60 dark:text-[#34d399] dark:hover:bg-[#34d399]/10"
               @click="copy(startCode)"
               :disabled="copied"
             >
@@ -76,13 +80,15 @@
               :href="tgDeepLink"
               target="_blank"
               rel="noopener"
-              class="flex-1 rounded-lg border border-black/10 px-3 py-2 text-center text-sm font-medium transition hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+              class="flex-1 rounded-lg border border-[#047857]/40 px-3 py-2 text-center text-sm font-medium text-[#047857] transition
+                     hover:bg-[#047857]/10 dark:border-[#34d399]/60 dark:text-[#34d399] dark:hover:bg-[#34d399]/10"
             >
               Открыть Telegram
             </a>
             <button
               type="button"
-              class="flex-1 rounded-lg border border-black/10 px-3 py-2 text-sm font-medium transition hover:bg-black/5 dark:border-white/10 dark:hover:bg-white/10"
+              class="flex-1 rounded-lg border border-[#047857]/40 px-3 py-2 text-sm font-medium text-[#047857] transition
+                     hover:bg-[#047857]/10 dark:border-[#34d399]/60 dark:text-[#34d399] dark:hover:bg-[#34d399]/10"
               @click="resetStart"
             >
               Сменить код
@@ -104,8 +110,9 @@
               inputmode="numeric"
               autocomplete="one-time-code"
               placeholder="Введите сгенерированный код (или 123456)"
-              class="w-full rounded-xl border border-black/10 bg-white/80 px-4 py-3 outline-none transition
-                     focus:ring-2 focus:ring-sky-400 dark:border-white/10 dark:bg-white/5"
+              class="w-full rounded-xl border border-[#047857]/30 bg-white/80 px-4 py-3 outline-none transition
+                     focus:border-[#047857] focus:ring-2 focus:ring-[#047857] disabled:border-[#047857]/20
+                     dark:border-[#047857]/40 dark:bg-white/5 dark:focus:border-[#34d399] dark:focus:ring-[#34d399]"
               :disabled="!startCode || loadingVerify"
               maxlength="12"
             />
@@ -116,9 +123,10 @@
 
           <button
             type="submit"
-            class="w-full rounded-xl bg-gray-900 px-4 py-3 font-semibold text-white transition
-                   hover:bg-gray-800 active:scale-[0.99] disabled:opacity-60 dark:bg-white dark:text-black dark:hover:bg-white/90"
-            :disabled="!canSubmit || loadingVerify"
+            class="w-full rounded-xl bg-[#047857] px-4 py-3 font-semibold text-white transition
+                   hover:bg-[#059669] active:scale-[0.99] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#34d399]
+                   disabled:cursor-not-allowed disabled:bg-[#047857]/60 disabled:opacity-60 dark:bg-[#059669] dark:hover:bg-[#34d399]"
+            :disabled="!startCode || loadingVerify"
           >
             {{ loadingVerify ? 'Проверяем…' : 'Войти' }}
           </button>
@@ -136,14 +144,7 @@
         </footer>
       </div>
 
-      <div class="mt-4 text-center">
-        <router-link
-          to="/"
-          class="text-sm text-gray-600 underline-offset-4 hover:underline dark:text-gray-300"
-        >
-          На главную
-        </router-link>
-      </div>
+    
     </div>
   </section>
 </template>
