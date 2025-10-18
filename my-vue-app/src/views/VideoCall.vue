@@ -1,8 +1,8 @@
 <template>
-  <div class="flex min-h-screen flex-col bg-black text-white">
-    <main class="flex-1">
+  <div class="h-[100svh] w-full overflow-hidden bg-black text-white">
+    <main class="h-[100svh] w-full overflow-hidden">
       <VideoPhone
-        class="h-full w-full"
+        class="h-[100svh] w-full"
         :contact-name="peerName"
         :subtitle="callSubtitle"
         :muted="muted"
@@ -18,6 +18,8 @@
     </main>
   </div>
 </template>
+
+
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
