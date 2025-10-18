@@ -36,25 +36,32 @@
         :aria-pressed="speakerOn"
         @click="toggleSpeaker"
       >
-        <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
-          <path
-            d="M5 8l4.5-4.5A1 1 0 0111 4v3.5h1.5L17 4v16l-4.5-3.5H11V20a1 1 0 01-1.5.8L5 16"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-          <path
-            v-if="speakerOn"
-            d="M18.5 9.5a4 4 0 010 5M20.5 8a6.5 6.5 0 010 8"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-          <path
-            v-else
-            d="M18 9l3 3m0 0l-3 3m3-3H18"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-        </svg>
+       <svg
+  class="h-6 w-6"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.6"
+  viewBox="0 0 24 24"
+>
+  <path
+    d="M4 9v6h3l5 4V5L7 9H4z"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <path
+    v-if="speakerOn"
+    d="M16 8a5 5 0 010 8m2-10a8 8 0 010 12"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <path
+    v-else
+    d="M16 9l3 3m0 0l-3 3m3-3h-3"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+</svg>
+
       </button>
 
       <button
@@ -86,17 +93,18 @@
 
       <button
         type="button"
-        class="flex h-16 w-16 -rotate-12 items-center justify-center rounded-full bg-[#ff3b30] text-white shadow-lg transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/60"
+        class="flex h-16 w-16 -rotate-12 items-center justify-center rounded-full bg-[#ff3b30] text-white shadow-lg transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/60 rotate-[136deg]"
         @click="hangup"
       >
-        <svg class="h-7 w-7" fill="none" stroke="currentColor" stroke-width="1.6" viewBox="0 0 24 24">
-          <path
-            d="M4 15c0-2.5 4-4.5 8-4.5S20 12.5 20 15m-5-3h2.5a1.5 1.5 0 011.5 1.5V16"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-          <path d="M9 12h6" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
+        <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              class="h-[22px] w-[22px]"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path d="M6.62 10.79a15.05 15.05 0 006.59 6.59c.62.3 1.36.19 1.85-.3l1.2-1.2a1 1 0 011.05-.24l2.72.91a1 1 0 01.67.95v2.13a2 2 0 01-2.18 2A18 18 0 013 6.48 2 2 0 015 4.3h2.13a1 1 0 01.95.67l.91 2.72a1 1 0 01-.24 1.05l-1.2 1.2c-.49.49-.61 1.23-.3 1.85z" />
+            </svg>
       </button>
     </footer>
   </section>
