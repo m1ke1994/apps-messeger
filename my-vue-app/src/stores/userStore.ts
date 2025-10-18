@@ -15,6 +15,10 @@ export const useUserStore = defineStore('user', {
     status: 'idle' as StoreStatus,
   }),
   actions: {
+    setProfile(profile: UserProfile) {
+      this.profile = profile
+      this.status = 'ready'
+    },
     async fetchProfile() {
       if (this.status === 'loading') {
         return

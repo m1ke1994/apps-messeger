@@ -17,7 +17,7 @@
         <header class="mb-6 text-center">
           <h1 class="text-2xl font-bold tracking-tight">Вход / Регистрация</h1>
           <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">
-            Авторизация через Telegram. Сначала подтвердим номер, затем введёшь код.
+            Локальная демо-авторизация «как через Telegram». Код генерируется на клиенте.
           </p>
         </header>
 
@@ -48,7 +48,7 @@
                    bg-[#229ED9] text-white hover:brightness-110 disabled:opacity-60 disabled:cursor-not-allowed"
             :disabled="!phoneValid || loadingStart || !!startCode"
           >
-            {{ startCode ? 'Код уже получен' : (loadingStart ? 'Отправляем…' : 'Получить код в Telegram') }}
+            {{ startCode ? 'Код уже получен' : (loadingStart ? 'Генерируем…' : 'Получить код (демо)') }}
           </button>
         </form>
 
@@ -59,7 +59,7 @@
         >
           <div class="flex items-center justify-between gap-2">
             <div>
-              <p class="text-xs uppercase tracking-wide text-sky-700 dark:text-sky-300">Start code</p>
+              <p class="text-xs uppercase tracking-wide text-sky-700 dark:text-sky-300">Start code (демо)</p>
               <p class="font-mono text-lg font-semibold">{{ startCode }}</p>
             </div>
             <button
@@ -96,14 +96,14 @@
 
         <!-- Шаг 2: ввод проверочного кода -->
         <form class="mt-6 space-y-3" @submit.prevent="handleVerify">
-          <label class="block text-sm font-medium" for="otp">Код из Telegram</label>
+          <label class="block text-sm font-medium" for="otp">Код из «Telegram»</label>
           <div class="relative">
             <input
               id="otp"
               v-model.trim="verifyCode"
               inputmode="numeric"
               autocomplete="one-time-code"
-              placeholder="Введите 6–8 значный код"
+              placeholder="Введите сгенерированный код (или 123456)"
               class="w-full rounded-xl border border-black/10 bg-white/80 px-4 py-3 outline-none transition
                      focus:ring-2 focus:ring-sky-400 dark:border-white/10 dark:bg-white/5"
               :disabled="!startCode || loadingVerify"
@@ -132,7 +132,7 @@
         </form>
 
         <footer class="mt-6 text-center text-xs text-gray-500 dark:text-gray-400">
-          Нажимая «Войти», вы соглашаетесь с условиями сервиса и политикой конфиденциальности.
+          Демо: без сервера. Код = {{ startCode || '—' }}, допустим также «123456».
         </footer>
       </div>
 
@@ -153,10 +153,7 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/userStore'
 
-// ENV
-// VITE_API_BASE_URL=https://api.example.com
-// VITE_TELEGRAM_BOT=your_bot_username  (без @)
-const API = import.meta.env.VITE_API_BASE_URL || ''
+// Опционально: имя бота из .env (не обязательно для моков)
 const TG_BOT = (import.meta.env.VITE_TELEGRAM_BOT || '').replace(/^@/, '')
 
 const router = useRouter()
@@ -181,7 +178,6 @@ let timer: number | null = null
 // ======== Computed ========
 const phoneValid = computed(() => {
   const normalized = normalizePhone(phone.value)
-  // Примитивная проверка E.164: + и от 8 до 15 цифр
   return /^\+\d{8,15}$/.test(normalized)
 })
 
@@ -210,7 +206,14 @@ const canSubmit = computed(() => {
   return !!startCode.value && verifyCode.value.length >= 4 && !loadingVerify.value
 })
 
-// ======== Methods ========
+// ============= Mocks (без сервера) ============
+function randomCode(len = 6) {
+  const digits = '0123456789'
+  let out = ''
+  for (let i = 0; i < len; i++) out += digits[Math.floor(Math.random() * digits.length)]
+  return out
+}
+
 async function handleStart() {
   errorMsg.value = ''
   phoneError.value = ''
@@ -224,28 +227,9 @@ async function handleStart() {
 
   loadingStart.value = true
   try {
-    // бек ожидает номер для связки
-    const res = await fetch(`${API}/api/auth/telegram/start`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone: normalized }),
-    })
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    const data = await res.json()
-
-    startCode.value = data.start_code || data.startCode
-    if (!startCode.value) throw new Error('Не получили start_code')
-
-    const expiresIso = data.expires_at || data.expiresAt
-    const ttl = typeof data.ttl === 'number' ? data.ttl : null
-
-    if (expiresIso) {
-      startExpiresAt.value = typeof expiresIso === 'number' ? expiresIso : Date.parse(expiresIso)
-    } else if (ttl) {
-      startExpiresAt.value = Date.now() + ttl * 1000
-    } else {
-      startExpiresAt.value = Date.now() + 5 * 60 * 1000
-    }
+    // Мокаем выдачу start_code и TTL = 5 минут
+    startCode.value = randomCode(6)
+    startExpiresAt.value = Date.now() + 5 * 60 * 1000
 
     if (timer) window.clearInterval(timer)
     timer = window.setInterval(() => {
@@ -255,7 +239,7 @@ async function handleStart() {
       }
     }, 1000)
   } catch (e: any) {
-    errorMsg.value = normalizeErr(e, 'Не удалось отправить код. Попробуйте позже.')
+    errorMsg.value = 'Локальная генерация кода не удалась.'
     startCode.value = null
     startExpiresAt.value = null
   } finally {
@@ -268,29 +252,28 @@ async function handleVerify() {
   errorMsg.value = ''
   loadingVerify.value = true
   try {
-    const payload = {
-      start_code: startCode.value,
-      code: verifyCode.value.trim(),
-    }
-    const res = await fetch(`${API}/api/auth/telegram/verify`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+    // Условия успеха в демо: код совпадает со startCode ИЛИ равен 123456
+    const ok = verifyCode.value.trim() === startCode.value || verifyCode.value.trim() === '123456'
+    const alive = (startExpiresAt.value || 0) > Date.now()
+
+    if (!ok) throw new Error('Неверный код')
+    if (!alive) throw new Error('Срок действия кода истёк')
+
+    // Фейковые «токены»
+    localStorage.setItem('access', 'demo-access-token')
+    localStorage.setItem('refresh', 'demo-refresh-token')
+
+    // Mark demo profile so navigation treats user as authenticated
+    const normalized = normalizePhone(phone.value)
+    userStore.setProfile({
+      id: 'demo',
+      name: 'Demo User',
+      phone: normalized,
     })
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    const data = await res.json()
 
-    const access = data.access || data.token?.access
-    const refresh = data.refresh || data.token?.refresh
-    if (!access || !refresh) throw new Error('Пустой ответ авторизации')
-
-    localStorage.setItem('access', access)
-    localStorage.setItem('refresh', refresh)
-
-    await userStore.fetchProfile()
-    router.replace('/chats')
+    router.replace({ name: 'chats' })
   } catch (e: any) {
-    errorMsg.value = normalizeErr(e, 'Неверный код или истёк срок действия. Запросите новый.')
+    errorMsg.value = String(e?.message || 'Проверка не пройдена')
   } finally {
     loadingVerify.value = false
   }
@@ -316,22 +299,13 @@ async function copy(text: string) {
   } catch { /* no-op */ }
 }
 
-function normalizeErr(e: any, fallback: string) {
-  return String(e?.response?.data?.detail || e?.response?.data?.message || e?.message || fallback)
-}
-
 // Нормализация телефона в E.164 с простыми правилами СНГ
 function normalizePhone(raw: string): string {
   let digits = String(raw).replace(/[^\d+]/g, '')
-  // если начинается с 8 и длина >= 10 — преобразуем в +7…
   if (/^8\d{10}$/.test(digits)) digits = '+7' + digits.slice(1)
-  // если начинается с 7 без плюса — добавим плюс
   if (/^7\d{10,14}$/.test(digits)) digits = '+' + digits
-  // если нет плюса и начинается с 0 — уберём ведущие нули
   if (/^0+\d+$/.test(digits)) digits = digits.replace(/^0+/, '')
-  // если начинается с ++ — исправим
   digits = digits.replace(/^\++/, '+')
-  // если без плюса, но похоже на международный — добавим
   if (!digits.startsWith('+') && /^\d{8,15}$/.test(digits)) digits = '+' + digits
   return digits
 }
