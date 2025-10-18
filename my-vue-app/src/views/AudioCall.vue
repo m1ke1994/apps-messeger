@@ -1,20 +1,21 @@
 <template>
-  <div class="flex min-h-screen flex-col bg-slate-900 text-white">
-    <main class="flex flex-1 items-center justify-center px-4 py-10">
-      <AudioPhone
-        :contact-name="peerName"
-        :subtitle="callSubtitle"
-        :avatar="peerAvatar"
-        :muted="muted"
-        :speaker-on="speakerOn"
-        :elapsed="elapsed"
-        @toggle-mute="toggleMute"
-        @toggle-speaker="toggleSpeaker"
-        @hangup="endCall"
-      />
-    </main>
+  <div class="h-[100svh] w-full overflow-hidden bg-[#0a1418] text-white">
+    <AudioPhone
+      class="h-[100svh] w-full"
+      :contact-name="peerName"
+      :subtitle="callSubtitle"
+      :avatar="peerAvatar"
+      :muted="muted"
+      :speaker-on="speakerOn"
+      :elapsed="elapsed"
+      @toggle-mute="toggleMute"
+      @toggle-speaker="toggleSpeaker"
+      @hangup="endCall"
+    />
   </div>
 </template>
+
+
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
