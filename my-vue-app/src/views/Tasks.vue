@@ -59,7 +59,7 @@
             <!-- Теги -->
             <div v-if="t.tags?.length" class="mt-3 flex flex-wrap gap-2">
               <span v-for="tag in t.tags" :key="tag"
-                class="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary border border-black">
+                class="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary border border-gray">
                 {{ tag }}
               </span>
             </div>

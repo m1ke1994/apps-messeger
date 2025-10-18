@@ -158,13 +158,13 @@
                   Срок: {{ form.deadlineDays }} {{ dayWord(form.deadlineDays) }}
                 </span>
                 <span
-                  v-if="previewUrgency === 'urgent'"
+                  v-if="showUrgentBadge"
                   class="rounded-full bg-rose-100 px-2.5 py-1 font-semibold text-rose-700 dark:bg-rose-400/15 dark:text-rose-300"
                 >
                   Срочно
                 </span>
                 <span
-                  v-else-if="previewUrgency === 'soon'"
+                  v-else-if="showSoonBadge"
                   class="rounded-full bg-amber-100 px-2.5 py-1 font-semibold text-amber-800 dark:bg-amber-400/15 dark:text-amber-300"
                 >
                   Скоро
@@ -375,13 +375,16 @@ function resolveAuthor() {
   }
 }
 
-const previewUrgency = computed<'urgent' | 'soon' | null>(() => {
-  if (form.urgent) return 'urgent'
+const showUrgentBadge = computed(() => {
+  if (form.urgent) return true
   const days = Number(form.deadlineDays)
-  if (!Number.isFinite(days)) return null
-  if (days <= 2) return 'urgent'
-  if (days <= 7) return 'soon'
-  return null
+  return Number.isFinite(days) && days <= 2
+})
+
+const showSoonBadge = computed(() => {
+  if (showUrgentBadge.value) return false
+  const days = Number(form.deadlineDays)
+  return Number.isFinite(days) && days <= 7
 })
 
 /* ---- Склонение слова «день» ---- */
