@@ -1,7 +1,10 @@
 
 <template>
   <div class="flex min-h-screen flex-col bg-background-light text-black dark:bg-background-dark dark:text-white">
-    <header class="sticky top-0 z-10 flex items-center justify-between bg-background-light/80 px-5 py-4 backdrop-blur dark:bg-background-dark/80">
+    <header
+      v-if="!isLoginRoute"
+      class="sticky top-0 z-10 flex items-center justify-between bg-background-light/80 px-5 py-4 backdrop-blur dark:bg-background-dark/80"
+    >
       <div class="flex h-10 w-10 items-center justify-center">
         <button
           v-if="showBackButton && !isLoginRoute"
@@ -161,6 +164,8 @@ const navItems: NavItem[] = [
   { name: 'profile', label: 'Профиль', icon: 'profile' },
   { name: 'settings', label: 'Настройки', icon: 'settings' },
 ]
+// src/App.vue
+
 
 const TITLE_MAP: Record<string, string> = {
   chats: 'Чаты',
@@ -187,7 +192,7 @@ const rMeta = computed<Record<string, unknown>>(() => ((route as any)?.meta ?? {
 const hideNav = computed(() => Boolean(rMeta.value.hideNav))
 const isCallRoute = computed(() => rName.value === 'chat-audio-call' || rName.value === 'chat-video-call')
 
-const isLoginRoute = computed(() => rName.value === 'login')
+const isLoginRoute = computed(() => rName.value === 'auth')
 const isChatDetail = computed(() => rName.value === 'chat-detail')
 
 const showBackButton = computed(() => Boolean(rMeta.value.showBack))
