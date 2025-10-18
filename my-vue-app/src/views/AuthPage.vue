@@ -42,9 +42,7 @@
                 :disabled="loadingStart || !!startCode"
                 @blur="normalizePhoneInline"
               />
-              <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-                <span class="text-xs text-gray-500 dark:text-gray-400">E.164</span>
-              </div>
+              
             </div>
             <p v-if="phoneError" class="text-sm text-rose-600 dark:text-rose-300">{{ phoneError }}</p>
 
@@ -115,16 +113,14 @@
                 v-model.trim="verifyCode"
                 inputmode="numeric"
                 autocomplete="one-time-code"
-                placeholder="Введите сгенерированный код (или 123456)"
+                placeholder="Введите сгенерированный код"
                 class="w-full rounded-xl border border-[#047857]/30 bg-white/80 px-4 py-3 outline-none transition
                        focus:border-[#047857] focus:ring-2 focus:ring-[#047857] disabled:border-[#047857]/20
                        dark:border-[#047857]/40 dark:bg-white/5 dark:focus:border-[#34d399] dark:focus:ring-[#34d399]"
                 :disabled="!startCode || loadingVerify"
                 maxlength="12"
               />
-              <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-                <span class="text-xs text-gray-500 dark:text-gray-400">OTP</span>
-              </div>
+              
             </div>
 
             <button
