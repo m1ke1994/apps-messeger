@@ -1,7 +1,8 @@
 <template>
   <div class="flex min-h-screen flex-col bg-black text-white">
-    <main class="flex flex-1 items-center justify-center px-4 py-10">
+    <main class="flex-1">
       <VideoPhone
+        class="h-full w-full"
         :contact-name="peerName"
         :subtitle="callSubtitle"
         :muted="muted"
