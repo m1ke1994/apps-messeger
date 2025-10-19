@@ -159,7 +159,7 @@ type NavItem = { name: NavName; label: string; icon: string }
 const navItems: NavItem[] = [
   { name: 'chats', label: 'Чаты', icon: 'chats' },
   { name: 'tasks', label: 'Задачи', icon: 'tasks' },
-  { name: 'responses', label: 'Отклики', icon: 'responses' },
+  { name: 'responses', label: 'Мои отклики', icon: 'responses' },
   { name: 'create-task', label: 'Создать задачу', icon: 'create-task' },
   { name: 'profile', label: 'Профиль', icon: 'profile' },
   { name: 'settings', label: 'Настройки', icon: 'settings' },
@@ -170,7 +170,7 @@ const navItems: NavItem[] = [
 const TITLE_MAP: Record<string, string> = {
   chats: 'Чаты',
   tasks: 'Задачи',
-  responses: 'Отклики',
+  responses: 'Мои отклики',
   'create-task': 'Создать задачу',
   profile: 'Профиль',
   settings: 'Настройки',

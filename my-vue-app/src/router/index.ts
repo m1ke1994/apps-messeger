@@ -55,7 +55,7 @@ const router = createRouter({
       path: '/responses',
       name: 'responses',
       component: () => import('../views/Responce.vue'),
-      meta: { title: 'Отклики', showBack: true },
+      meta: { title: 'Мои отклики', showBack: true },
     },
     {
       path: '/create-task',

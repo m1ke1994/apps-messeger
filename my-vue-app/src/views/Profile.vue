@@ -1,4 +1,4 @@
-<!-- ProfileView.vue -->
+﻿<!-- ProfileView.vue -->
 <template>
   <div
     class="relative flex min-h-screen w-full flex-col justify-between overflow-x-hidden bg-background-light font-display text-text-light dark:bg-background-dark dark:text-text-dark"
@@ -28,13 +28,26 @@
         <div class="text-center space-y-1">
           <h2 class="text-2xl font-extrabold tracking-tight">{{ user.name }}</h2>
           <p class="text-sm text-subtext-light dark:text-subtext-dark">{{ user.city }}</p>
+          <p
+            v-if="user.phone"
+            class="text-sm font-semibold text-text-light dark:text-text-dark"
+          >
+            {{ user.phone }}
+          </p>
+          <p
+            v-if="user.email"
+            class="text-sm text-subtext-light dark:text-subtext-dark"
+          >
+            {{ user.email }}
+          </p>
         </div>
 
         <button
           type="button"
+          @click="handlePrimaryAction"
           class="w-full rounded-xl bg-[#047857] px-5 py-3 text-base font-bold text-white shadow-sm transition hover:bg-[#059669] active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#059669]/40"
         >
-          Редактировать профиль
+          {{ primaryActionLabel }}
         </button>
       </section>
 
@@ -70,41 +83,131 @@
           <transition name="fade-slide" mode="out-in">
             <div :key="active" class="space-y-6">
               <!-- О себе -->
-              <div v-if="active === 'about'">
-                <p class="text-subtext-light dark:text-subtext-dark">
-                  {{ user.about }}
-                </p>
+              <div v-if="active === 'about'">
+                <template v-if="!editing">
+                  <p class="text-subtext-light dark:text-subtext-dark">
+                    {{ user.about }}
+                  </p>
+
+                  <div class="mt-6">
+                    <h3 class="mb-3 text-lg font-bold">Навыки</h3>
+                    <div class="flex flex-wrap gap-2">
+                      <span
+                        v-for="s in user.skills"
+                        :key="s"
+                        class="rounded-full bg-emerald-700/10 px-3 py-1 text-sm font-medium text-emerald-700 ring-1 ring-emerald-700/20"
+                      >
+                        {{ s }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div class="rounded-xl bg-white/60 p-4 ring-1 ring-border-light/60 dark:bg-white/5 dark:ring-white/10">
+                      <h3 class="mb-1 text-lg font-bold">Образование</h3>
+                      <p class="text-sm text-subtext-light dark:text-subtext-dark">
+                        {{ user.education }}
+                      </p>
+                    </div>
+                    <div class="rounded-xl bg-white/60 p-4 ring-1 ring-border-light/60 dark:bg-white/5 dark:ring-white/10">
+                      <h3 class="mb-1 text-lg font-bold">Статус</h3>
+                      <p class="text-sm text-subtext-light dark:text-subtext-dark">
+                        {{ user.status }}
+                      </p>
+                    </div>
+                  </div>
+                </template>
+
+                <template v-else>
+                  <form class="space-y-6" @submit.prevent="saveEdit">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <label class="flex flex-col gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
+                        Полное имя
+                        <input
+                          v-model="draft.name"
+                          type="text"
+                          class="w-full rounded-xl border border-black/10 bg-white/80 px-3 py-2 text-base text-slate-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-white/10 dark:bg-white/10 dark:text-slate-100"
+                          required
+                        />
+                      </label>
+                      <label class="flex flex-col gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
+                        Город
+                        <input
+                          v-model="draft.city"
+                          type="text"
+                          class="w-full rounded-xl border border-black/10 bg-white/80 px-3 py-2 text-base text-slate-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-white/10 dark:bg-white/10 dark:text-slate-100"
+                        />
+                      </label>
+                      <label class="flex flex-col gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
+                        Электронная почта
+                        <input
+                          v-model="draft.email"
+                          type="email"
+                          class="w-full rounded-xl border border-black/10 bg-white/80 px-3 py-2 text-base text-slate-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-white/10 dark:bg-white/10 dark:text-slate-100"
+                          required
+                        />
+                      </label>
+                      <label class="flex flex-col gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
+                        Телефон
+                        <input
+                          :value="user.phone"
+                          type="text"
+                          disabled
+                          class="w-full cursor-not-allowed rounded-xl border border-dashed border-black/10 bg-white/50 px-3 py-2 text-base text-slate-500 outline-none dark:border-white/10 dark:bg-white/5 dark:text-slate-300"
+                        />
+                      </label>
+                    </div>
+
+                    <label class="flex flex-col gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
+                      О себе
+                      <textarea
+                        v-model="draft.about"
+                        rows="4"
+                        class="w-full rounded-xl border border-black/10 bg-white/80 px-3 py-3 text-base text-slate-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-white/10 dark:bg-white/10 dark:text-slate-100"
+                      ></textarea>
+                    </label>
+
+                    <label class="flex flex-col gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
+                      Навыки (через запятую)
+                      <input
+                        v-model="draft.skills"
+                        type="text"
+                        class="w-full rounded-xl border border-black/10 bg-white/80 px-3 py-2 text-base text-slate-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-white/10 dark:bg-white/10 dark:text-slate-100"
+                      />
+                    </label>
+
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <label class="flex flex-col gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
+                        Образование
+                        <input
+                          v-model="draft.education"
+                          type="text"
+                          class="w-full rounded-xl border border-black/10 bg-white/80 px-3 py-2 text-base text-slate-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-white/10 dark:bg-white/10 dark:text-slate-100"
+                        />
+                      </label>
+                      <label class="flex flex-col gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
+                        Статус
+                        <input
+                          v-model="draft.status"
+                          type="text"
+                          class="w-full rounded-xl border border-black/10 bg-white/80 px-3 py-2 text-base text-slate-900 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 dark:border-white/10 dark:bg-white/10 dark:text-slate-100"
+                        />
+                      </label>
+                    </div>
+
+                    <div class="flex justify-end">
+                      <button
+                        type="submit"
+                        class="inline-flex items-center rounded-xl bg-[#047857] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#059669] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#059669]/30"
+                      >
+                        Сохранить
+                      </button>
+                    </div>
+                  </form>
+                </template>
+              </div>
 
-                <div class="mt-6">
-                  <h3 class="mb-3 text-lg font-bold">Навыки</h3>
-                  <div class="flex flex-wrap gap-2">
-                    <span
-                      v-for="s in user.skills"
-                      :key="s"
-                      class="rounded-full bg-emerald-700/10 px-3 py-1 text-sm font-medium text-emerald-700 ring-1 ring-emerald-700/20"
-                    >
-                      {{ s }}
-                    </span>
-                  </div>
-                </div>
-
-                <div class="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div class="rounded-xl bg-white/60 p-4 ring-1 ring-border-light/60 dark:bg-white/5 dark:ring-white/10">
-                    <h3 class="mb-1 text-lg font-bold">Образование</h3>
-                    <p class="text-sm text-subtext-light dark:text-subtext-dark">
-                      {{ user.education }}
-                    </p>
-                  </div>
-                  <div class="rounded-xl bg-white/60 p-4 ring-1 ring-border-light/60 dark:bg-white/5 dark:ring-white/10">
-                    <h3 class="mb-1 text-lg font-bold">Статус</h3>
-                    <p class="text-sm text-subtext-light dark:text-subtext-dark">
-                      {{ user.status }}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Мои задания -->
+<!-- Мои задания -->
               <div v-else-if="active === 'tasks'" class="space-y-3">
                 <div
                   v-for="(task, i) in user.tasks"
@@ -153,56 +256,112 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 
 type TabValue = 'about' | 'tasks' | 'responses' | 'reviews'
 
 const defaultAvatar = 'https://i.pravatar.cc/300?img=47'
 
 const user = ref({
-  name: 'Анастасия Самгородецкая',
+  name: 'Елизавета Андреева',
   avatarUrl: 'https://i.pravatar.cc/300?img=47',
   online: true,
   city: 'Москва',
+  phone: '+7 999 123-45-67',
+  email: 'demo@workspace.dev',
   about:
-    'Фронтенд-разработчик с опытом в Vue, Quasar и Tailwind. Люблю создавать удобные интерфейсы и работать с API.',
+    'Фронтенд-разработчик с опытом во Vue, Quasar и Tailwind. Люблю создавать удобные интерфейсы и работать с API.',
   skills: ['Vue 3', 'Quasar', 'Tailwind', 'TypeScript', 'Pinia', 'REST API'],
-  education: 'МГТУ им. Баумана — Информационные системы и технологии',
-  status: 'Доступен для новых проектов',
+  education: 'СПбГУ, факультет информатики и прикладной математики',
+  status: 'Открыта для новых проектов',
   tasks: [
     {
-      title: 'Разработка лендинга для стартапа',
-      description: 'Создать адаптивный сайт с анимацией и формой обратной связи.',
-      deadline: 'до 12 октября 2025',
+      title: 'Запуск лендинга для курса',
+      description: 'Нужно сверстать страницу и настроить сбор заявок.',
+      deadline: 'до 12 ноября 2025',
     },
     {
-      title: 'Интерфейс биржи заданий',
-      description: 'Реализовать карточки проектов и фильтры по категориям.',
-      deadline: 'до 18 октября 2025',
+      title: 'Редизайн личного кабинета',
+      description: 'Оптимизация интерфейса заказчика и адаптация под мобильные.',
+      deadline: 'до 18 ноября 2025',
     },
   ],
   responses: [
-    { task: 'Создание Telegram-бота', message: 'Здравствуйте! Готов выполнить за 2 дня.', status: 'Ожидание ответа' },
-    { task: 'Верстка промо-страницы', message: 'Могу сделать сегодня вечером.', status: 'Принят' },
+    { task: 'Разработка Telegram-бота', message: 'Добрый день! Могу подготовить MVP за 2 дня.', status: 'Отправлено' },
+    { task: 'Лендинг для стартапа', message: 'Есть свежие идеи по дизайну.', status: 'Просмотрено' },
   ],
   reviews: [
-    { author: 'Иван Петров', comment: 'Отличная работа, всё вовремя и качественно!', rating: 5 },
-    { author: 'Мария Смирнова', comment: 'Очень внимательный и ответственный специалист.', rating: 5 },
+    { author: 'Анна Орлова', comment: 'Очень ответственный подход, всё сделано в срок!', rating: 5 },
+    { author: 'Игорь Смирнов', comment: 'Внимательная к деталям и инициативная разработчица.', rating: 5 },
   ],
 })
 
 const tabs: { value: TabValue; label: string }[] = [
   { value: 'about', label: 'О себе' },
-  { value: 'tasks', label: 'Мои задания' },
+  { value: 'tasks', label: 'Мои задачи' },
   { value: 'responses', label: 'Мои отклики' },
   { value: 'reviews', label: 'Отзывы' },
 ]
 
 const active = ref<TabValue>('about')
+const editing = ref(false)
+const draft = reactive({
+  name: '',
+  city: '',
+  email: '',
+  about: '',
+  skills: '',
+  education: '',
+  status: '',
+})
+
+const primaryActionLabel = computed(() => (editing.value ? 'Сохранить изменения' : 'Редактировать профиль'))
+
+function populateDraft() {
+  const value = user.value
+  draft.name = value.name
+  draft.city = value.city
+  draft.email = value.email ?? ''
+  draft.about = value.about ?? ''
+  draft.skills = Array.isArray(value.skills) ? value.skills.join(', ') : ''
+  draft.education = value.education ?? ''
+  draft.status = value.status ?? ''
+}
+
+function handlePrimaryAction() {
+  if (editing.value) {
+    saveEdit()
+  } else {
+    startEdit()
+  }
+}
+
+function startEdit() {
+  populateDraft()
+  editing.value = true
+}
+
+function cancelEdit() {
+  editing.value = false
+}
+
+function saveEdit() {
+  const value = user.value
+  value.name = draft.name.trim() || value.name
+  value.city = draft.city.trim()
+  value.email = draft.email.trim()
+  value.about = draft.about.trim()
+  value.education = draft.education.trim()
+  value.status = draft.status.trim()
+  value.skills = draft.skills
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0)
+  editing.value = false
+}
 
 function selectTab(val: TabValue) {
   active.value = val
-  // плавная прокрутка к активной кнопке
   requestAnimationFrame(() => {
     const container = document.querySelector('.tabs-scroll') as HTMLElement | null
     const activeBtn = container?.querySelector('[aria-selected="true"]') as HTMLElement | null
@@ -246,3 +405,9 @@ function selectTab(val: TabValue) {
   transform: translateY(-6px);
 }
 </style>
+
+
+
+
+
+

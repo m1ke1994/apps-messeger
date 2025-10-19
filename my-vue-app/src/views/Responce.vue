@@ -2,14 +2,7 @@
   <div
     class="relative flex min-h-screen w-full flex-col justify-between overflow-x-hidden bg-background-light font-display text-text-light dark:bg-background-dark dark:text-text-dark"
   >
-    <header class="px-4 pt-6 sm:px-6">
-      <div class="flex flex-col gap-1">
-        <h1 class="text-2xl font-semibold tracking-tight">Мои отклики</h1>
-        <p class="text-sm text-slate-600 dark:text-slate-300">
-          Отслеживайте статус откликов и управляйте коммуникацией с заказчиками.
-        </p>
-      </div>
-    </header>
+  
 
     <main class="flex-1 px-4 py-6 sm:px-6">
       <section class="mx-auto flex w-full max-w-3xl flex-col gap-4">
