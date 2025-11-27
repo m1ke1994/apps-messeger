@@ -11,6 +11,7 @@ environ.Env.read_env(BASE_DIR / ".env")
 
 DEBUG = env("DEBUG")
 SECRET_KEY = env("SECRET_KEY")
+JWT_SECRET = env("JWT_SECRET", default=SECRET_KEY)
 ALLOWED_HOSTS = [h.strip() for h in env("ALLOWED_HOSTS", default="").split(",") if h.strip()]
 
 # === ПРИЛОЖЕНИЯ ===
@@ -24,6 +25,7 @@ INSTALLED_APPS = [
 
     # внешние
     "rest_framework",
+    "drf_yasg",
     "corsheaders",
 
     # локальные
@@ -65,10 +67,10 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 # === БАЗА ДАННЫХ ===
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+    "default": env.db(
+        "DATABASE_URL",
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+    )
 }
 
 # === ВРЕМЯ И ЛОКАЛИ ===
@@ -97,6 +99,7 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(hours=6),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "AUTH_HEADER_TYPES": ("Bearer",),
+    "SIGNING_KEY": JWT_SECRET,
 }
 
 # === КАСТОМНЫЙ ПОЛЬЗОВАТЕЛЬ ===
@@ -107,3 +110,23 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # === TELEGRAM ===
 TELEGRAM_BOT_TOKEN = env("TELEGRAM_BOT_TOKEN")
+
+# Logging for Telegram bot visibility
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "standard": {"format": "[%(levelname)s] %(asctime)s %(name)s: %(message)s"},
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "standard",
+        },
+    },
+    "loggers": {
+        "auth_telegram": {"handlers": ["console"], "level": "INFO"},
+        "telegram": {"handlers": ["console"], "level": "INFO"},
+        "telegram.bot": {"handlers": ["console"], "level": "INFO"},
+    },
+}

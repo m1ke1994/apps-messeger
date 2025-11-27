@@ -87,7 +87,8 @@ const router = createRouter({
 
 router.beforeEach((to, _from, next) => {
   const userStore = useUserStore()
-  const isAuthenticated = Boolean(userStore.profile)
+  const hasStored = userStore.hydrateFromStorage()
+  const isAuthenticated = Boolean(userStore.profile || hasStored)
 
   if (to.name === 'auth' && isAuthenticated) {
     next({ name: 'chats', replace: true })

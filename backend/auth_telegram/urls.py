@@ -1,7 +1,7 @@
 from django.urls import path
-from .views import start, verify
+
+from .views import verify_code
 
 urlpatterns = [
-    path("start/", start, name="telegram_start"),
-    path("verify/", verify, name="telegram_verify"),
+    path("verify-code/", verify_code, name="telegram_verify_code"),
 ]

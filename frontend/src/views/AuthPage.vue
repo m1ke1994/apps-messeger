@@ -1,9 +1,8 @@
-<!-- src/views/AuthTelegram.vue -->
+<!-- src/views/AuthPage.vue -->
 <template>
   <section
     class="relative flex min-h-screen items-center justify-center bg-background-light px-4 py-12 text-gray-900 transition-colors dark:bg-background-dark dark:text-white sm:px-6 lg:px-8"
   >
-    <!-- Фон -->
     <Transition appear name="bg-bloom">
       <div aria-hidden="true" class="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
         <div
@@ -20,13 +19,12 @@
           class="auth-card rounded-2xl border border-black/10 bg-white/70 p-6 backdrop-blur-md shadow-xl dark:border-white/10 dark:bg-black/30"
         >
           <header class="mb-6 text-center fade-in-step" style="--i:0;">
-            <h1 class="text-2xl font-bold tracking-tight">Вход / Регистрация</h1>
+            <h1 class="text-2xl font-bold tracking-tight">Вход через Telegram</h1>
             <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">
-              Локальная демо-авторизация «как через Telegram». Код генерируется на клиенте.
+              Откройте бота, поделитесь контактом — получите одноразовый код и введите его здесь.
             </p>
           </header>
 
-          <!-- Шаг 0 -->
           <form class="space-y-3 fade-in-step" style="--i:1;" @submit.prevent="handleStart">
             <label class="block text-sm font-medium" for="phone">Номер телефона</label>
             <div class="relative">
@@ -39,10 +37,9 @@
                 class="w-full rounded-xl border border-[#047857]/30 bg-white/80 px-4 py-3 outline-none transition
                        focus:border-[#047857] focus:ring-2 focus:ring-[#047857] disabled:border-[#047857]/20
                        dark:border-[#047857]/40 dark:bg-white/5 dark:focus:border-[#34d399] dark:focus:ring-[#34d399]"
-                :disabled="loadingStart || !!startCode"
+                :disabled="loadingStart"
                 @blur="normalizePhoneInline"
               />
-              
             </div>
             <p v-if="phoneError" class="text-sm text-rose-600 dark:text-rose-300">{{ phoneError }}</p>
 
@@ -51,76 +48,55 @@
               class="w-full rounded-xl px-4 py-3 text-base font-semibold transition active:scale-[0.99]
                      bg-[#047857] text-white hover:bg-[#059669] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#34d399]
                      disabled:cursor-not-allowed disabled:bg-[#047857]/60 disabled:opacity-60"
-              :disabled="!phoneValid || loadingStart || !!startCode"
+              :disabled="!phoneValid || loadingStart"
             >
-              {{ startCode ? 'Код уже получен' : (loadingStart ? 'Генерируем…' : 'Получить код (демо)') }}
+              {{ loadingStart ? 'Открываем бота...' : 'Открыть Telegram-бот' }}
             </button>
           </form>
 
-          <!-- Код -->
           <div
-            v-if="startCode"
+            v-if="startInitiated"
             class="fade-in-step mt-4 rounded-xl border border-[#047857]/30 bg-[#047857]/5 p-4 dark:border-[#34d399]/30 dark:bg-[#047857]/10"
             style="--i:2;"
           >
-            <div class="flex items-center justify-between gap-2">
-              <div>
-                <p class="text-xs uppercase tracking-wide text-[#047857] dark:text-[#34d399]">Start code (демо)</p>
-                <p class="font-mono text-lg font-semibold">{{ startCode }}</p>
+            <div class="flex flex-col gap-2">
+              <p class="text-sm font-medium text-[#047857] dark:text-[#34d399]">Дальнейшие шаги</p>
+              <ol class="list-decimal pl-5 text-sm leading-relaxed text-gray-800 dark:text-gray-100">
+                <li>В Telegram нажмите кнопку «Отправить контакт».</li>
+                <li>Получите код от бота и введите его ниже.</li>
+              </ol>
+              <div class="flex flex-col gap-2 sm:flex-row">
+                <a
+                  :href="tgDeepLink"
+                  target="_blank"
+                  rel="noopener"
+                  class="flex-1 rounded-lg border border-[#047857]/40 px-3 py-2 text-center text-sm font-medium text-[#047857] transition
+                         hover:bg-[#047857]/10 dark:border-[#34d399]/60 dark:text-[#34d399] dark:hover:bg-[#34d399]/10"
+                >
+                  Открыть Telegram
+                </a>
+                <p class="flex-1 rounded-lg border border-[#047857]/10 px-3 py-2 text-sm text-gray-700 dark:border-[#34d399]/20 dark:text-gray-200">
+                  Код живёт: <span class="font-semibold">{{ ttlLabel }}</span>
+                </p>
               </div>
-              <button
-                class="rounded-lg border border-[#047857]/40 px-3 py-2 text-sm font-medium text-[#047857] transition
-                       hover:bg-[#047857]/10 disabled:cursor-not-allowed disabled:opacity-60
-                       dark:border-[#34d399]/60 dark:text-[#34d399] dark:hover:bg-[#34d399]/10"
-                @click="copy(startCode)"
-                :disabled="copied"
-              >
-                {{ copied ? 'Скопировано' : 'Копировать' }}
-              </button>
             </div>
-
-            <div class="mt-3 flex flex-col gap-2 sm:flex-row">
-              <a
-                :href="tgDeepLink"
-                target="_blank"
-                rel="noopener"
-                class="flex-1 rounded-lg border border-[#047857]/40 px-3 py-2 text-center text-sm font-medium text-[#047857] transition
-                       hover:bg-[#047857]/10 dark:border-[#34d399]/60 dark:text-[#34d399] dark:hover:bg-[#34d399]/10"
-              >
-                Открыть Telegram
-              </a>
-              <button
-                type="button"
-                class="flex-1 rounded-lg border border-[#047857]/40 px-3 py-2 text-sm font-medium text-[#047857] transition
-                       hover:bg-[#047857]/10 dark:border-[#34d399]/60 dark:text-[#34d399] dark:hover:bg-[#34d399]/10"
-                @click="resetStart"
-              >
-                Сменить код
-              </button>
-            </div>
-
-            <p class="mt-2 text-xs text-gray-600 dark:text-gray-300">
-              Срок жизни кода: <span class="font-medium">{{ ttlLabel }}</span>
-            </p>
           </div>
 
-          <!-- Проверка -->
           <form class="mt-6 space-y-3 fade-in-step" style="--i:3;" @submit.prevent="handleVerify">
-            <label class="block text-sm font-medium" for="otp">Код из «Telegram»</label>
+            <label class="block text-sm font-medium" for="otp">Код из Telegram</label>
             <div class="relative">
               <input
                 id="otp"
                 v-model.trim="verifyCode"
                 inputmode="numeric"
                 autocomplete="one-time-code"
-                placeholder="Введите сгенерированный код"
+                placeholder="Ваш одноразовый код"
                 class="w-full rounded-xl border border-[#047857]/30 bg-white/80 px-4 py-3 outline-none transition
                        focus:border-[#047857] focus:ring-2 focus:ring-[#047857] disabled:border-[#047857]/20
                        dark:border-[#047857]/40 dark:bg-white/5 dark:focus:border-[#34d399] dark:focus:ring-[#34d399]"
-                :disabled="!startCode || loadingVerify"
+                :disabled="loadingVerify"
                 maxlength="12"
               />
-              
             </div>
 
             <button
@@ -128,9 +104,9 @@
               class="w-full rounded-xl bg-[#047857] px-4 py-3 font-semibold text-white transition
                      hover:bg-[#059669] active:scale-[0.99] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#34d399]
                      disabled:cursor-not-allowed disabled:bg-[#047857]/60 disabled:opacity-60 dark:bg-[#059669] dark:hover:bg-[#34d399]"
-              :disabled="!startCode || loadingVerify"
+              :disabled="!canSubmit"
             >
-              {{ loadingVerify ? 'Проверяем…' : 'Войти' }}
+              {{ loadingVerify ? 'Проверяем...' : 'Войти' }}
             </button>
 
             <p
@@ -142,7 +118,7 @@
           </form>
 
           <footer class="fade-in-step mt-6 text-center text-xs text-gray-500 dark:text-gray-400" style="--i:4;">
-            Демо: без сервера. Код = {{ startCode || '—' }}, допустим также «123456».
+            Подсказка: бот пришлёт код после отправки контакта. Срок действия — 10 минут.
           </footer>
         </div>
       </Transition>
@@ -151,21 +127,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { onBeforeUnmount, onMounted, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { verifyTelegramCode } from '@/api/auth'
 import { useUserStore } from '@/stores/userStore'
 
-const TG_BOT = (import.meta.env.VITE_TELEGRAM_BOT || '').replace(/^@/, '')
+const TG_BOT = (import.meta.env.VITE_TELEGRAM_BOT || 'app_messeger_bot').replace(/^@/, '')
 const router = useRouter()
 const userStore = useUserStore()
 
 const loadingStart = ref(false)
 const loadingVerify = ref(false)
-const startCode = ref<string | null>(null)
+const startInitiated = ref(false)
 const startExpiresAt = ref<number | null>(null)
 const verifyCode = ref('')
 const errorMsg = ref('')
-const copied = ref(false)
 const phone = ref('')
 const phoneError = ref('')
 let timer: number | null = null
@@ -177,30 +153,27 @@ const ttlLabel = computed(() => {
   return s <= 0 ? 'истёк' : `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`
 })
 const tgDeepLink = computed(() => {
-  const code = startCode.value || ''
   if (!TG_BOT) return '#'
-  return `https://t.me/${TG_BOT}${code ? `?start=${encodeURIComponent(code)}` : ''}`
+  return `https://t.me/${TG_BOT}`
 })
-const canSubmit = computed(() => !!startCode.value && verifyCode.value.length >= 4 && !loadingVerify.value)
-
-function randomCode(len = 6) {
-  const digits = '0123456789'
-  return Array.from({ length: len }, () => digits[Math.floor(Math.random() * digits.length)]).join('')
-}
+const canSubmit = computed(() => phoneValid.value && verifyCode.value.trim().length >= 4 && !loadingVerify.value)
 
 async function handleStart() {
   phoneError.value = ''
   errorMsg.value = ''
-  copied.value = false
   const normalized = normalizePhone(phone.value)
   if (!/^\+\d{8,15}$/.test(normalized)) {
-    phoneError.value = 'Введите корректный номер в формате +XXXXXXXXXXX'
+    phoneError.value = 'Укажите номер в формате +XXXXXXXXXXX'
     return
   }
+  phone.value = normalized
   loadingStart.value = true
   try {
-    startCode.value = randomCode(6)
-    startExpiresAt.value = Date.now() + 5 * 60 * 1000
+    startInitiated.value = true
+    startExpiresAt.value = Date.now() + 10 * 60 * 1000
+    if (tgDeepLink.value !== '#') {
+      window.open(tgDeepLink.value, '_blank')
+    }
     if (timer) clearInterval(timer)
     timer = window.setInterval(() => {
       if (ttlMs.value <= 0 && timer) {
@@ -217,40 +190,20 @@ async function handleVerify() {
   if (!canSubmit.value) return
   errorMsg.value = ''
   loadingVerify.value = true
+  const normalized = normalizePhone(phone.value)
   try {
-    const ok = verifyCode.value.trim() === startCode.value || verifyCode.value.trim() === '123456'
-    const alive = (startExpiresAt.value || 0) > Date.now()
-    if (!ok) throw new Error('Неверный код')
-    if (!alive) throw new Error('Срок действия кода истёк')
-    localStorage.setItem('access', 'demo-access-token')
-    localStorage.setItem('refresh', 'demo-refresh-token')
-    const normalized = normalizePhone(phone.value)
-    await Promise.all([
-      userStore.bootstrapDemoProfile({ id: 'demo', name: 'Demo User', phone: normalized }),
-      router.replace({ name: 'chats' }),
-    ])
+    const res = await verifyTelegramCode(normalized, verifyCode.value.trim())
+    userStore.setSession(res.token, res.refresh, {
+      id: String(res.user.id),
+      name: res.user.username || res.user.phone || 'User',
+      phone: res.user.phone,
+    })
+    await router.replace({ name: 'chats' })
   } catch (e: any) {
-    errorMsg.value = String(e?.message || 'Ошибка проверки')
+    errorMsg.value = String(e?.message || 'Не удалось подтвердить код')
   } finally {
     loadingVerify.value = false
   }
-}
-
-function resetStart() {
-  startCode.value = null
-  startExpiresAt.value = null
-  verifyCode.value = ''
-  errorMsg.value = ''
-  copied.value = false
-  if (timer) clearInterval(timer)
-}
-
-async function copy(text: string) {
-  try {
-    await navigator.clipboard.writeText(text)
-    copied.value = true
-    setTimeout(() => (copied.value = false), 1200)
-  } catch {}
 }
 
 function normalizePhone(raw: string) {
@@ -267,14 +220,19 @@ function normalizePhoneInline() {
   phoneError.value = /^\+\d{8,15}$/.test(n) ? '' : 'Формат: +XXXXXXXXXXX'
 }
 
-onMounted(() => { if (localStorage.getItem('access')) router.replace('/chats') })
-onBeforeUnmount(() => { if (timer) clearInterval(timer) })
+onMounted(() => {
+  if (userStore.hydrateFromStorage()) {
+    router.replace({ name: 'chats' })
+  }
+})
+onBeforeUnmount(() => {
+  if (timer) clearInterval(timer)
+})
 </script>
 
 <style scoped>
 input { font-size: 16px; }
 
-/* ===== Плавное появление карточки ===== */
 .auth-pop-enter-from {
   opacity: 0;
   transform: translateY(16px) scale(0.98) rotateX(6deg);
@@ -295,12 +253,10 @@ input { font-size: 16px; }
               0 0 0 1px rgba(52, 211, 153, 0.1);
 }
 
-/* ===== Мягкое "распускание" фона ===== */
 .bg-bloom-enter-from { opacity: 0; transform: scale(0.96); }
 .bg-bloom-enter-active { transition: opacity .8s ease, transform .8s ease; }
 .bg-bloom-enter-to { opacity: 1; transform: scale(1); }
 
-/* ===== Каскадная лестница появления содержимого ===== */
 .fade-in-step {
   opacity: 0;
   transform: translateY(10px);
