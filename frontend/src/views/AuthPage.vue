@@ -193,11 +193,23 @@ async function handleVerify() {
   const normalized = normalizePhone(phone.value)
   try {
     const res = await verifyTelegramCode(normalized, verifyCode.value.trim())
-    userStore.setSession(res.token, res.refresh, {
-      id: String(res.user.id),
-      name: res.user.username || res.user.phone || 'User',
-      phone: res.user.phone,
-    })
+    userStore.setTokens(res.token, res.refresh)
+
+    try {
+      await userStore.loadProfile()
+    } catch (loadErr) {
+      userStore.setProfile({
+        id: res.user.id,
+        displayName: res.user.username || res.user.phone || 'User',
+        username: res.user.username,
+        phone: res.user.phone,
+        about: '',
+        avatarUrl: '',
+        email: '',
+        telegramUsername: res.user.username,
+      })
+      console.error('Profile load failed right after login, using fallback', loadErr)
+    }
     await router.replace({ name: 'chats' })
   } catch (e: any) {
     errorMsg.value = String(e?.message || 'Не удалось подтвердить код')
@@ -221,9 +233,14 @@ function normalizePhoneInline() {
 }
 
 onMounted(() => {
-  if (userStore.hydrateFromStorage()) {
-    router.replace({ name: 'chats' })
-  }
+  userStore
+    .ensureProfile()
+    .then((ok) => {
+      if (ok) router.replace({ name: 'chats' })
+    })
+    .catch(() => {
+      userStore.clearProfile()
+    })
 })
 onBeforeUnmount(() => {
   if (timer) clearInterval(timer)

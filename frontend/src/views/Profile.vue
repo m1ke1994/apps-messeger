@@ -12,7 +12,26 @@
           <div
             class="h-32 w-32 rounded-full bg-cover bg-center ring-2 ring-white/70 dark:ring-white/10"
             :style="{ backgroundImage: `url('${user.avatarUrl || defaultAvatar}')` }"
+            @click="triggerAvatarSelect"
+            role="button"
+            tabindex="0"
+            aria-label="Сменить аватар"
           />
+          <input
+            ref="avatarInput"
+            type="file"
+            class="hidden"
+            accept="image/*"
+            @change="onAvatarSelected"
+          />
+          <button
+            type="button"
+            class="absolute bottom-1 right-1 rounded-full bg-black/70 px-3 py-1 text-xs font-semibold text-white shadow-sm transition hover:bg-black/80 disabled:opacity-60"
+            @click="triggerAvatarSelect"
+            :disabled="loadingAvatar"
+          >
+            {{ loadingAvatar ? '...' : 'Сменить' }}
+          </button>
           <div
             v-if="user.online"
             class="absolute -bottom-1 -right-1 flex items-center gap-1 rounded-full border-2 border-card-light bg-emerald-700 px-2 py-1 text-xs font-bold text-white shadow-sm dark:border-card-dark"
@@ -256,11 +275,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
+import { updateMyProfile, uploadAvatar } from '@/api/profile'
+import { useUserStore } from '@/stores/userStore'
 
 type TabValue = 'about' | 'tasks' | 'responses' | 'reviews'
 
 const defaultAvatar = 'https://i.pravatar.cc/300?img=47'
+
+const userStore = useUserStore()
+const avatarInput = ref<HTMLInputElement | null>(null)
+const loadingAvatar = ref(false)
+const savingProfile = ref(false)
 
 const user = ref({
   name: 'Елизавета Андреева',
@@ -328,9 +354,21 @@ function populateDraft() {
   draft.status = value.status ?? ''
 }
 
-function handlePrimaryAction() {
+function mergeStoreProfile() {
+  const profile = userStore.profile
+  if (!profile) return
+
+  const value = user.value
+  value.name = profile.name
+  value.avatarUrl = profile.avatarUrl || ''
+  value.phone = profile.phone || ''
+  value.email = profile.email || ''
+  value.about = profile.about || ''
+}
+
+async function handlePrimaryAction() {
   if (editing.value) {
-    saveEdit()
+    await saveEdit()
   } else {
     startEdit()
   }
@@ -345,19 +383,35 @@ function cancelEdit() {
   editing.value = false
 }
 
-function saveEdit() {
-  const value = user.value
-  value.name = draft.name.trim() || value.name
-  value.city = draft.city.trim()
-  value.email = draft.email.trim()
-  value.about = draft.about.trim()
-  value.education = draft.education.trim()
-  value.status = draft.status.trim()
-  value.skills = draft.skills
-    .split(',')
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0)
-  editing.value = false
+async function saveEdit() {
+  if (savingProfile.value) return
+  savingProfile.value = true
+
+  try {
+    const payload = {
+      displayName: draft.name.trim() || undefined,
+      about: draft.about.trim() || undefined,
+      email: draft.email.trim() || undefined,
+    }
+    const updated = await updateMyProfile(payload)
+    userStore.setProfile(updated)
+
+    const value = user.value
+    value.city = draft.city.trim()
+    value.education = draft.education.trim()
+    value.status = draft.status.trim()
+    value.skills = draft.skills
+      .split(',')
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0)
+
+    mergeStoreProfile()
+    editing.value = false
+  } catch (error) {
+    console.error('Failed to update profile', error)
+  } finally {
+    savingProfile.value = false
+  }
 }
 
 function selectTab(val: TabValue) {
@@ -371,6 +425,40 @@ function selectTab(val: TabValue) {
     }
   })
 }
+
+function triggerAvatarSelect() {
+  avatarInput.value?.click()
+}
+
+async function onAvatarSelected(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+
+  loadingAvatar.value = true
+  try {
+    const updated = await uploadAvatar(file)
+    userStore.setProfile(updated)
+    mergeStoreProfile()
+  } catch (error: any) {
+    console.error('Avatar upload failed', error)
+    alert(String(error?.message || 'Не удалось загрузить аватар'))
+  } finally {
+    loadingAvatar.value = false
+    input.value = ''
+  }
+}
+
+onMounted(async () => {
+  try {
+    const ok = await userStore.ensureProfile()
+    if (ok) {
+      mergeStoreProfile()
+    }
+  } catch (error) {
+    console.error('Failed to load profile', error)
+  }
+})
 </script>
 
 <style>

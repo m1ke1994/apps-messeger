@@ -22,7 +22,7 @@ const router = createRouter({
       name: 'chat-detail',
       component: () => import('../views/ChatsDetail.vue'),
       props: true,
-      meta: { title: 'Диалог', showBack: true },
+      meta: { title: 'Чат', showBack: true },
     },
     {
       path: '/chats/:id/audio',
@@ -42,26 +42,26 @@ const router = createRouter({
       path: '/tasks',
       name: 'tasks',
       component: () => import('../views/Tasks.vue'),
-      meta: { title: 'Задания', showBack: true },
+      meta: { title: 'Задачи', showBack: true },
     },
     {
       path: '/tasks/:id(\\d+)',
       name: 'task-detail',
       component: () => import('../views/TaskDetail.vue'),
       props: true,
-      meta: { title: 'Задание', showBack: true },
+      meta: { title: 'Задача', showBack: true },
     },
     {
       path: '/responses',
       name: 'responses',
       component: () => import('../views/Responce.vue'),
-      meta: { title: 'Мои отклики', showBack: true },
+      meta: { title: 'Отклики', showBack: true },
     },
     {
       path: '/create-task',
       name: 'create-task',
       component: () => import('../views/CreateTasks.vue'),
-      meta: { title: 'Создание задания', showBack: true },
+      meta: { title: 'Создать задачу', showBack: true },
     },
     {
       path: '/profile',
@@ -79,16 +79,22 @@ const router = createRouter({
       path: '/auth',
       name: 'auth',
       component: () => import('../views/AuthPage.vue'),
-      meta: { layout: 'auth', title: 'Авторизация' },
+      meta: { layout: 'auth', title: 'Вход' },
     },
     { path: '/:pathMatch(.*)*', redirect: '/auth' },
   ],
 })
 
-router.beforeEach((to, _from, next) => {
+router.beforeEach(async (to, _from, next) => {
   const userStore = useUserStore()
-  const hasStored = userStore.hydrateFromStorage()
-  const isAuthenticated = Boolean(userStore.profile || hasStored)
+  let isAuthenticated = false
+
+  try {
+    const hasProfile = await userStore.ensureProfile()
+    isAuthenticated = Boolean(hasProfile)
+  } catch {
+    isAuthenticated = false
+  }
 
   if (to.name === 'auth' && isAuthenticated) {
     next({ name: 'chats', replace: true })

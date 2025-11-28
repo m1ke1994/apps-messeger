@@ -1,11 +1,5 @@
 import { defineStore } from 'pinia'
-
-interface UserProfile {
-  id: string
-  name: string
-  phone?: string
-  email?: string
-}
+import { fetchMyProfile, type UserProfile } from '@/api/profile'
 
 type StoreStatus = 'idle' | 'loading' | 'ready'
 
@@ -13,9 +7,11 @@ const ACCESS_KEY = 'access'
 const REFRESH_KEY = 'refresh'
 const PROFILE_KEY = 'profile'
 
+type StoredProfile = UserProfile & { name: string }
+
 export const useUserStore = defineStore('user', {
   state: () => ({
-    profile: null as UserProfile | null,
+    profile: null as StoredProfile | null,
     status: 'idle' as StoreStatus,
   }),
   actions: {
@@ -29,16 +25,18 @@ export const useUserStore = defineStore('user', {
       localStorage.removeItem(REFRESH_KEY)
       localStorage.removeItem(PROFILE_KEY)
     },
-    setSession(access: string, refresh: string | undefined, profile: UserProfile) {
+    setTokens(access: string, refresh?: string) {
       localStorage.setItem(ACCESS_KEY, access)
       if (refresh) localStorage.setItem(REFRESH_KEY, refresh)
-      localStorage.setItem(PROFILE_KEY, JSON.stringify(profile))
-      this.profile = profile
-      this.status = 'ready'
     },
     setProfile(profile: UserProfile) {
-      this.profile = profile
+      const normalized: StoredProfile = {
+        ...profile,
+        name: profile.displayName || profile.username || profile.phone || 'User',
+      }
+      this.profile = normalized
       this.status = 'ready'
+      localStorage.setItem(PROFILE_KEY, JSON.stringify(normalized))
     },
     hydrateFromStorage(): boolean {
       if (this.profile) return true
@@ -46,7 +44,7 @@ export const useUserStore = defineStore('user', {
       const storedProfile = localStorage.getItem(PROFILE_KEY)
       if (!access || !storedProfile) return false
       try {
-        const parsed = JSON.parse(storedProfile) as UserProfile
+        const parsed = JSON.parse(storedProfile) as StoredProfile
         this.profile = parsed
         this.status = 'ready'
         return true
@@ -55,45 +53,34 @@ export const useUserStore = defineStore('user', {
         return false
       }
     },
-    async bootstrapDemoProfile(partial?: Partial<UserProfile>) {
-      this.status = 'loading'
-      this.profile = {
-        id: partial?.id ?? 'demo',
-        name: partial?.name ?? 'Demo User',
-        phone: partial?.phone,
-        email: partial?.email,
-      }
+    async ensureProfile(): Promise<boolean> {
+      if (this.profile) return true
+      const access = localStorage.getItem(ACCESS_KEY)
+      if (!access) return false
 
-      await new Promise<void>((resolve) => {
-        setTimeout(resolve, 500)
-      })
-
-      this.status = 'ready'
-    },
-    async fetchProfile() {
-      if (this.status === 'loading') {
-        return
-      }
-
-      this.status = 'loading'
+      // Try cached profile first
+      if (this.hydrateFromStorage()) return true
 
       try {
-        await new Promise<void>((resolve) => {
-          setTimeout(resolve, 600)
-        })
-
-        const generatedId =
-          typeof globalThis !== 'undefined' &&
-          'crypto' in globalThis &&
-          typeof globalThis.crypto?.randomUUID === 'function'
-            ? globalThis.crypto.randomUUID()
-            : String(Date.now())
-
-        this.profile = {
-          id: generatedId,
-          name: 'New user',
-        }
-        this.status = 'ready'
+        this.status = 'loading'
+        const remote = await fetchMyProfile()
+        this.setProfile(remote)
+        return true
+      } catch (error) {
+        this.clearProfile()
+        throw error
+      }
+    },
+    async loadProfile(): Promise<void> {
+      const access = localStorage.getItem(ACCESS_KEY)
+      if (!access) {
+        this.clearProfile()
+        return
+      }
+      this.status = 'loading'
+      try {
+        const remote = await fetchMyProfile()
+        this.setProfile(remote)
       } catch (error) {
         this.status = 'idle'
         throw error

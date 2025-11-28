@@ -66,12 +66,22 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 # === БАЗА ДАННЫХ ===
-DATABASES = {
-    "default": env.db(
-        "DATABASE_URL",
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
-    )
-}
+# Логика:
+# - если есть DATABASE_URL (Docker/прод) -> используем её через env.db
+# - если нет DATABASE_URL (локально) -> обычный SQLite в backend/db.sqlite3
+database_url = env("DATABASE_URL", default=None)
+
+if database_url:
+    DATABASES = {
+        "default": env.db("DATABASE_URL"),
+    }
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 # === ВРЕМЯ И ЛОКАЛИ ===
 LANGUAGE_CODE = "ru-ru"
@@ -81,6 +91,8 @@ USE_TZ = True
 
 # === СТАТИКА ===
 STATIC_URL = "static/"
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 # === CORS ===
 CORS_ALLOWED_ORIGINS = [s for s in env("CORS_ALLOWED_ORIGINS", default="").split(",") if s]
