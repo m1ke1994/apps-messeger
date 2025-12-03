@@ -9,6 +9,9 @@ class User(AbstractUser):
     display_name = models.CharField(max_length=255, blank=True, null=True)
     about = models.TextField(blank=True, null=True)
     avatar = models.ImageField(upload_to="avatars/", blank=True, null=True)
+    skills = models.JSONField(default=list, blank=True)
+    education = models.CharField(max_length=255, blank=True, null=True)
+    status = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
         return self.username or (self.phone or f"user:{self.pk}")

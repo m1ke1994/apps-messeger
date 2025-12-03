@@ -5,13 +5,18 @@ export type UserProfile = {
   displayName: string
   username?: string
   about?: string
+  skills?: string[]
+  education?: string
+  status?: string
   avatarUrl?: string
   telegramUsername?: string
   phone?: string
   email?: string
 }
 
-export type UpdateProfilePayload = Partial<Pick<UserProfile, 'displayName' | 'username' | 'about' | 'email'>>
+export type UpdateProfilePayload = Partial<
+  Pick<UserProfile, 'displayName' | 'username' | 'about' | 'email' | 'skills' | 'education' | 'status'>
+>
 
 export function fetchMyProfile() {
   return apiRequest<UserProfile>('/api/profile/me/')

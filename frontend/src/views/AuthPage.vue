@@ -204,13 +204,14 @@ async function handleVerify() {
         username: res.user.username,
         phone: res.user.phone,
         about: '',
-        avatarUrl: '',
+        avatarUrl: 'https://i.pravatar.cc/300?img=47',
         email: '',
         telegramUsername: res.user.username,
       })
       console.error('Profile load failed right after login, using fallback', loadErr)
     }
-    await router.replace({ name: 'chats' })
+    const needsProfile = userStore.needsCompletion()
+    await router.replace({ name: needsProfile ? 'profile' : 'chats' })
   } catch (e: any) {
     errorMsg.value = String(e?.message || 'Не удалось подтвердить код')
   } finally {

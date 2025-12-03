@@ -97,12 +97,18 @@ router.beforeEach(async (to, _from, next) => {
   }
 
   if (to.name === 'auth' && isAuthenticated) {
-    next({ name: 'chats', replace: true })
+    const needsProfile = userStore.needsCompletion()
+    next({ name: needsProfile ? 'profile' : 'chats', replace: true })
     return
   }
 
   if (to.name !== 'auth' && !isAuthenticated) {
     next({ name: 'auth', replace: true })
+    return
+  }
+
+  if (isAuthenticated && userStore.needsCompletion() && to.name !== 'profile') {
+    next({ name: 'profile', replace: true })
     return
   }
 

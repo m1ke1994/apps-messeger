@@ -2,12 +2,13 @@ import { defineStore } from 'pinia'
 import { fetchMyProfile, type UserProfile } from '@/api/profile'
 
 type StoreStatus = 'idle' | 'loading' | 'ready'
+const DEFAULT_AVATAR = 'https://i.pravatar.cc/300?img=47'
 
 const ACCESS_KEY = 'access'
 const REFRESH_KEY = 'refresh'
 const PROFILE_KEY = 'profile'
 
-type StoredProfile = UserProfile & { name: string }
+type StoredProfile = UserProfile & { name: string; skills: string[] }
 
 export const useUserStore = defineStore('user', {
   state: () => ({
@@ -30,13 +31,29 @@ export const useUserStore = defineStore('user', {
       if (refresh) localStorage.setItem(REFRESH_KEY, refresh)
     },
     setProfile(profile: UserProfile) {
+      const normalizeSkills = Array.isArray(profile.skills) ? profile.skills.filter(Boolean) : []
       const normalized: StoredProfile = {
         ...profile,
         name: profile.displayName || profile.username || profile.phone || 'User',
+        avatarUrl: profile.avatarUrl || DEFAULT_AVATAR,
+        skills: normalizeSkills,
       }
       this.profile = normalized
       this.status = 'ready'
       localStorage.setItem(PROFILE_KEY, JSON.stringify(normalized))
+    },
+    isProfileComplete(profile: StoredProfile | null = this.profile) {
+      if (!profile) return false
+      const hasText = (value?: string | null) => Boolean(value && value.trim())
+      const hasSkills = Array.isArray(profile.skills) && profile.skills.length > 0
+      return (
+        hasText(profile.displayName) &&
+        hasText(profile.email) &&
+        hasText(profile.about) &&
+        hasText(profile.education) &&
+        hasText(profile.status) &&
+        hasSkills
+      )
     },
     hydrateFromStorage(): boolean {
       if (this.profile) return true
@@ -44,9 +61,8 @@ export const useUserStore = defineStore('user', {
       const storedProfile = localStorage.getItem(PROFILE_KEY)
       if (!access || !storedProfile) return false
       try {
-        const parsed = JSON.parse(storedProfile) as StoredProfile
-        this.profile = parsed
-        this.status = 'ready'
+        const parsed = JSON.parse(storedProfile) as UserProfile
+        this.setProfile(parsed)
         return true
       } catch {
         this.clearProfile()
@@ -70,6 +86,9 @@ export const useUserStore = defineStore('user', {
         this.clearProfile()
         throw error
       }
+    },
+    needsCompletion(): boolean {
+      return !this.isProfileComplete()
     },
     async loadProfile(): Promise<void> {
       const access = localStorage.getItem(ACCESS_KEY)

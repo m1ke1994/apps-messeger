@@ -10,6 +10,11 @@ class ProfileSerializer(serializers.ModelSerializer):
     displayName = serializers.SerializerMethodField()
     avatarUrl = serializers.SerializerMethodField()
     telegramUsername = serializers.SerializerMethodField()
+    skills = serializers.ListField(
+        child=serializers.CharField(max_length=100),
+        allow_empty=True,
+        required=False,
+    )
 
     class Meta:
         model = User
@@ -18,6 +23,9 @@ class ProfileSerializer(serializers.ModelSerializer):
             "displayName",
             "username",
             "about",
+            "skills",
+            "education",
+            "status",
             "avatarUrl",
             "telegramUsername",
             "phone",
@@ -26,6 +34,8 @@ class ProfileSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             "username": {"required": False, "allow_blank": True},
             "about": {"required": False, "allow_blank": True},
+            "education": {"required": False, "allow_blank": True, "allow_null": True},
+            "status": {"required": False, "allow_blank": True, "allow_null": True},
             "email": {"required": False, "allow_blank": True, "allow_null": True},
         }
 
@@ -53,9 +63,12 @@ class ProfileSerializer(serializers.ModelSerializer):
         if display_name is not None:
             instance.display_name = display_name.strip() or None
 
-        for field in ["username", "about", "email"]:
+        for field in ["username", "about", "education", "status", "email"]:
             if field in validated_data:
                 setattr(instance, field, validated_data.get(field) or None)
+
+        if "skills" in validated_data:
+            instance.skills = validated_data.get("skills") or []
 
         instance.save()
         return instance
